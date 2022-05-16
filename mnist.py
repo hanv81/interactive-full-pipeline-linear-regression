@@ -69,6 +69,20 @@ def main():
             history = model.fit(x_train, y_train_encode, epochs=int(epochs), verbose=1)
             model.evaluate(x_train, y_train_encode)
             model.evaluate(x_test, y_test_encode)
+            st.session_state.model = model
+
+        if 'model' in st.session_state:
+            model = st.session_state.model
+            img_file = st.file_uploader("Upload image file", type='png')
+            if img_file is not None:
+                im_frame = ImageOps.grayscale(Image.open(img_file))
+                st.image(im_frame)
+                im_frame = ImageOps.invert(im_frame)
+                im_frame = im_frame.resize((28,28), Image.ANTIALIAS)
+                np_frame = np.array(im_frame.getdata())
+                np_frame = np_frame.reshape(1,28,28,1)
+                prediction = np.squeeze(model.predict(np_frame))
+                st.write('Prediction: ' + str(np.argmax(prediction)))
 
 if __name__ == "__main__":
     main()
