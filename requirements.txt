@@ -1,4 +1,4 @@
 pandas
 plotly
-sklearn
+scikit-learn
 matplotlib
