@@ -51,17 +51,21 @@ def gradient_descent(x, y, w, eta):
   w = w-eta*dw
   return w, loss
 
-def draw_result(x, y, history):
-  w = history['weights'][-1]
+def draw_result(x, y, history, w_optimal):
+  id = np.argmin(history['loss'])
+  w, b = history['weights'][id]
   x_line = np.array([x.min(), x.max()])
-  y_line = x_line * w[0] + w[1]
+  y_line = x_line * w + b
+  y_optimal = x_line * w_optimal[0] + w_optimal[1]
 
   fig, _ = plt.subplots(1,2)
   fig.set_figheight(2)
   plt.subplot(1,2,1)
   plt.title('Regression Line')
   plt.scatter(x,y)
-  plt.plot(x_line, y_line, c='r')
+  plt.plot(x_line, y_line, c='y', label = 'GD')
+  plt.plot(x_line, y_optimal, c='r', label = 'Optimal')
+  plt.legend()
 
   plt.subplot(1,2,2)
   plt.title('Loss')
@@ -93,7 +97,7 @@ def train(x, y, w0, b0):
   with col2:
     epochs = st.number_input('Epochs', value=100, step=10, min_value=10)
   with col3:
-    batch_train = st.toggle('Mini-Batch Training')
+    batch_train = st.toggle('Mini-Batch GD')
     batch_size = st.number_input('Batch Size', min_value=1, max_value=100, value=10, step=5)
   with col4:
     draw_loss = st.toggle('Draw Loss Surface')
@@ -103,11 +107,11 @@ def train(x, y, w0, b0):
   with st.spinner('Training...'):
     history = fit(x, y, eta, epochs, batch_size)
     x_ = np.concatenate((x, np.ones((x.shape[0], 1))), axis=1)
-    w_ = np.linalg.pinv(x_.T @ x_) @ x_.T @ y
-    st.write('Optimal weights:', *w_.flatten())
-    st.write('Weights by GD:', *history['weights'][-1])
+    w_optimal = np.linalg.pinv(x_.T @ x_) @ x_.T @ y
+    st.write('Optimal weights:', *w_optimal.flatten())
+    st.write('Weights by GD:', *history['weights'][np.argmin(history['loss'])])
   with st.spinner('Visualizing...'):
-    draw_result(x,y,history)
+    draw_result(x, y, history, w_optimal)
     if draw_loss:visualize_loss_surface(x, y, w0, b0, history)
 
 def main():
