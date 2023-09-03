@@ -28,8 +28,8 @@ def visualize_loss_surface(x, y, w0, b0, history):
 
 def prepare_data():
   n_samples = st.slider('Select Data Size', value=2000, min_value=100, max_value=20000, step=100)
-  w = st.number_input('w', value=3)
-  b = st.number_input('b', value=2)
+  w = st.number_input('w', value=3.)
+  b = st.number_input('b', value=2.)
   x,y = generate_data(n_samples, w, b)
   return x,y,w,b
 
@@ -87,7 +87,7 @@ def train(x, y, w0, b0):
   with col1:
     eta = st.number_input('Learning Rate', value=.01, step=.01, max_value=.1, min_value=.0001)
   with col2:
-    epochs = st.slider('Epochs', step=100, min_value=100, max_value=5000)
+    epochs = st.number_input('Epochs', value=100, step=10, min_value=10)
   with col3:
     batch_train = st.toggle('Mini-Batch Training')
     batch_size = st.number_input('Batch Size', min_value=1, max_value=100, value=10, step=5)
