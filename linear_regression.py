@@ -83,9 +83,10 @@ def fit(x, y, eta, epochs, batch_size=0):
       xx, yy = x_[id], y[id]
     else:
       xx, yy = x_, y
+    history['weights'].append(w)
     w, loss = gradient_descent(xx, yy, w, eta)
     history['loss'].append(loss)
-    history['weights'].append(w)
+
   t = (time.time() - t)*1000
   st.write('Training time:', int(t), 'ms')
   return history
