@@ -9,125 +9,99 @@ from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 
+import numpy as np
+import matplotlib.pyplot as plt
+
+def generate_data(n_samples, w, b):
+  x = np.random.randn(n_samples,1)
+  noise = np.random.randn(n_samples,1)
+  y = w*x + noise + b
+  return x, y
+
+def visualize_data(x,y):
+  fig, ax = plt.subplots()
+  ax.scatter(x,y)
+  st.pyplot(fig)
+
+def prepare_data():
+  n_samples = st.slider('Select Data Size', value=2000, min_value=100, max_value=20000, step=100)
+  w = st.number_input('w', value=3)
+  b = st.number_input('b', value=2)
+  x,y = generate_data(n_samples, w, b)
+  # visualize_data(x,y)
+  return x,y
+
+def mse(y, y_pred):
+  return ((y-y_pred)**2).mean()
+
+def feed_forward(x, w):
+  return (x@w).reshape(-1,1)
+
+def gradient(x, y, y_pred):
+  return 2*(x*(y_pred - y)).mean(axis=0)
+
+def generate_weights(n_features):
+  return np.random.rand(n_features+1)
+
+def draw_result(x, y, history):
+  w = history['weights'][-1]
+  x_line = np.array([x.min(), x.max()])
+  y_line = x_line * w[0] + w[1]
+
+  fig, _ = plt.subplots(1,2)
+  fig.set_figheight(2)
+  plt.subplot(1,2,1)
+  plt.title('Regression Line')
+  plt.scatter(x,y)
+  plt.plot(x_line, y_line, c='r')
+
+  plt.subplot(1,2,2)
+  plt.title('Loss')
+  plt.plot(history['loss'])
+  st.pyplot(fig)
+
+def fit(x, y, eta, epochs, batch_size=0):
+  w = generate_weights(x.shape[1])
+  history = {'loss':[], 'weights':[]}
+  x_ = np.concatenate((x, np.ones((x.shape[0], 1))), axis=1)
+  for i in range(epochs):
+    y_pred = feed_forward(x_, w)
+    loss = mse(y, y_pred)
+    history['loss'].append(loss)
+    history['weights'].append(w)
+    if i%10==0:
+      print(f'iter {i}, loss: {loss}')
+    if batch_size > 0:
+      id = np.random.choice(len(y), batch_size)
+      dw = gradient(x_[id], y[id], y_pred[id])
+    else:
+      dw = gradient(x_, y, y_pred)
+    w = w-eta*dw
+
+  return history
+
+def train(x, y):
+  col1, col2, col3 = st.columns(3)
+  with col1:
+    eta = st.number_input('Learning Rate', value=.01, step=.01, max_value=.1, min_value=.0001)
+  with col2:
+    epochs = st.slider('Epochs', step=100, min_value=100, max_value=10000)
+  with col3:
+    batch_train = st.toggle('Batch Training')
+    batch_size = st.number_input('Batch Size', min_value=1, max_value=100, value=10, step=5)
+  
+  if not batch_train:
+    batch_size = 0
+  history = fit(x, y, eta, epochs, batch_size)
+  st.write('Weights:', *history['weights'][-1])
+  draw_result(x,y,history)
+
 def main():
-    st.header('Linear Regression')
-    uploaded_file = st.sidebar.file_uploader("Upload data file", type='csv')
-    
-    if uploaded_file is not None:
-        model = LinearRegression()
-        df = pd.read_csv(uploaded_file)
-        st.write(df.head())
-        features = df.columns[:-1]
-        label = df.columns[-1]
-        X = df[features].values
-        y = df[label].values
-
-        def form_callback():
-            if len(options) < 2:
-                return
-            i = features.get_loc(options[0])
-            j = features.get_loc(options[1])
-
-            fig = go.Figure(data=[go.Scatter3d(x=X[:,i], y=X[:,j], z=y, mode='markers')])
-            fig.update_layout(scene = dict(
-                xaxis_title=features[i],
-                yaxis_title=features[j],
-                zaxis_title=label),
-                width=700, margin=dict(r=20, b=10, l=10, t=10))
-            
-            if 'x_new' in st.session_state:
-                x_new = st.session_state.x_new
-                y_new = st.session_state.y_new
-                fig.add_scatter3d(x=[x_new[0]], y=[x_new[1]], z=[y_new])
-
-        options = st.multiselect('Select 2 features to visualize', features, [features[0], features[1]], on_change=form_callback)
-        if len(options) > 1:
-            i = features.get_loc(options[0])
-            j = features.get_loc(options[1])
-
-            fig = go.Figure(data=[go.Scatter3d(x=X[:,i], y=X[:,j], z=y, mode='markers')])
-            fig.update_layout(scene = dict(
-                xaxis_title=features[i],
-                yaxis_title=features[j],
-                zaxis_title=label),
-                width=700, margin=dict(r=20, b=10, l=10, t=10))
-
-            if 'x_new' in st.session_state:
-                x_new = st.session_state.x_new
-                y_new = st.session_state.y_new
-                fig.add_scatter3d(x=[x_new[0]], y=[x_new[1]], z=[y_new])
-
-            # if 'model' in st.session_state:
-            #     model = st.session_state.model
-
-            #     x_min, x_max = X[:,i].min() , X[:,i].max() 
-            #     y_min, y_max = X[:,j].min() , X[:,j].max() 
-            #     xrange = np.linspace(x_min, x_max, 50)
-            #     yrange = np.linspace(y_min, y_max, 50)
-            #     xx, yy = np.meshgrid(xrange, yrange)
-
-            #     inp = np.c_[xx.ravel(), yy.ravel()]
-
-            #     y_test_pred = model.predict(inp)
-            #     y_test_pred = y_test_pred.reshape(xx.shape)
-
-            #     fig.add_traces(go.Surface(x=xrange, y=yrange, z=y_test_pred, name='pred_surface'))
-
-            st.write(fig)
-        else:
-            fig, ax = plt.subplots()
-            plt.scatter(X[:,0], y)
-            st.write(fig)
-    
-        test_size = st.slider('Select test size', 10, 40, 20, 5)
-        submitted = st.button("Train")
-        if submitted:
-            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size)
-            
-            model.fit(X_train, y_train)
-            # y_test_pred = model.predict(X_test)
-            # mae = mean_absolute_error(y_test, y_test_pred)
-            # mse = mean_squared_error(y_test, y_test_pred)
-            # model_score = model.score(X_test, y_test)
-            s = ''
-            for w,f in zip(model.coef_, features):
-                w = round(w, 4)
-                if w > 0:
-                    if s == '':
-                        s = str(w) + f
-                    else:
-                        s += ' + ' + str(w) + f
-                else:
-                    s += ' - ' + str(abs(w)) + f
-            if model.intercept_ > 0:
-                s += ' + ' + str(round(model.intercept_, 4))
-            else:
-                s += ' - ' + str(round(model.intercept_, 4))
-            s = label + ' = ' + s
-            st.write('Model: ' + s)
-            # st.write('MAE: ' + str(round(mae, 4)))
-            # st.write('MSE: ' + str(round(mse, 4)))
-            # st.write('Model score: ' + str(round(model_score, 4)))
-
-            st.session_state.model = model
-            st.session_state.features = features
-            st.session_state.x_test = X_test
-            st.session_state.df = df
-
-    with st.form("inference form"):
-        
-        if 'features' in st.session_state:
-            x_new = []
-            for feature in features:
-                f_val = st.slider(feature, 0, 100, 0, 5)
-                x_new += [f_val]
-            submitted = st.form_submit_button("Predict")
-            if submitted:
-                model = st.session_state.model
-                y_new = model.predict([x_new])[0]
-                st.session_state.x_new = x_new
-                st.session_state.y_new = y_new
-                st.write('Sales = ' + str(round(y_new,4)) + ' USD')
+  st.header('Linear Regression')
+  with st.sidebar:
+    x,y = prepare_data()
+  
+  train(x,y)
 
 if __name__ == "__main__":
-    main()
+  main()
