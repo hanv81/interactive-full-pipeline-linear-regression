@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.pyplot as plt
 
+@st.cache_data
 def generate_data(n_samples, w, b):
   x = np.random.randn(n_samples,1)
   noise = np.random.randn(n_samples,1)
@@ -95,13 +96,15 @@ def train(x, y, w0, b0):
   
   if not batch_train:
     batch_size = 0
-  history = fit(x, y, eta, epochs, batch_size)
-  x_ = np.concatenate((x, np.ones((x.shape[0], 1))), axis=1)
-  w_ = np.linalg.pinv(x_.T @ x_) @ x_.T @ y
-  st.write('Optimal weights:', *w_.flatten())
-  st.write('Weights by GD:', *history['weights'][-1])
-  draw_result(x,y,history)
-  visualize_loss_surface(x, y, w0, b0, history)
+  with st.spinner('Training...'):
+    history = fit(x, y, eta, epochs, batch_size)
+    x_ = np.concatenate((x, np.ones((x.shape[0], 1))), axis=1)
+    w_ = np.linalg.pinv(x_.T @ x_) @ x_.T @ y
+    st.write('Optimal weights:', *w_.flatten())
+    st.write('Weights by GD:', *history['weights'][-1])
+  with st.spinner('Visualizing...'):
+    draw_result(x,y,history)
+    visualize_loss_surface(x, y, w0, b0, history)
 
 def main():
   st.header('Linear Regression')
