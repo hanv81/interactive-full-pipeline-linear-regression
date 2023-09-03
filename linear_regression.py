@@ -95,7 +95,10 @@ def train(x, y, w0, b0):
   if not batch_train:
     batch_size = 0
   history = fit(x, y, eta, epochs, batch_size)
-  st.write('Weights:', *history['weights'][-1])
+  x_ = np.concatenate((x, np.ones((x.shape[0], 1))), axis=1)
+  w_ = np.linalg.pinv(x_.T @ x_) @ x_.T @ y
+  st.write('Optimal weights:', *w_.flatten())
+  st.write('Weights by GD:', *history['weights'][-1])
   draw_result(x,y,history)
   visualize_loss_surface(x, y, w0, b0, history)
 
