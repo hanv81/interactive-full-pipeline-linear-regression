@@ -42,6 +42,13 @@ def feed_forward(x, w):
 def gradient(x, y, y_pred):
   return 2*(x*(y_pred - y)).mean(axis=0)
 
+def gradient_descent(x, y, w, eta):
+  y_pred = feed_forward(x, w)
+  loss = mse(y, y_pred)
+  dw = gradient(x, y, y_pred)
+  w = w-eta*dw
+  return w, loss
+
 def generate_weights(n_features):
   return np.random.rand(n_features+1)
 
@@ -67,18 +74,14 @@ def fit(x, y, eta, epochs, batch_size=0):
   history = {'loss':[], 'weights':[]}
   x_ = np.concatenate((x, np.ones((x.shape[0], 1))), axis=1)
   for i in range(epochs):
-    y_pred = feed_forward(x_, w)
-    loss = mse(y, y_pred)
-    history['loss'].append(loss)
-    history['weights'].append(w)
-    if i%10==0:
-      print(f'iter {i}, loss: {loss}')
     if batch_size > 0:
       id = np.random.choice(len(y), batch_size)
-      dw = gradient(x_[id], y[id], y_pred[id])
+      xx, yy = x_[id], y[id]
     else:
-      dw = gradient(x_, y, y_pred)
-    w = w-eta*dw
+      xx, yy = x_, y
+    w, loss = gradient_descent(xx, yy, w, eta)
+    history['loss'].append(loss)
+    history['weights'].append(w)
 
   return history
 
