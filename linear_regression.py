@@ -1,13 +1,7 @@
-import glob
 import streamlit as st
-import pandas as pd
 import numpy as np
-import plotly.express as px
 import plotly.graph_objects as go
 import matplotlib.pyplot as plt
-from sklearn.linear_model import LinearRegression
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_absolute_error, mean_squared_error
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -18,18 +12,26 @@ def generate_data(n_samples, w, b):
   y = w*x + noise + b
   return x, y
 
-def visualize_data(x,y):
-  fig, ax = plt.subplots()
-  ax.scatter(x,y)
-  st.pyplot(fig)
+def visualize_loss_surface(x, y, w0, b0, history):
+  w_ = np.array(history['weights'])
+  y_pred = w_[:,0]*x + w_[:,1]
+  loss_ = ((y_pred - y)**2).mean(axis=0)
+  w = np.linspace(w0-3, w0+3, 200)
+  b = np.linspace(b0-3, b0+3, 200)
+  ww, bb = np.meshgrid(w, b)
+  wb = np.c_[ww.ravel(), bb.ravel()]
+  loss = np.mean(((wb[:,0]*x + wb[:,1])-y)**2, axis=0)
+
+  fig = go.Figure(data=[go.Surface(x=w, y=b, z=loss.reshape(ww.shape)),
+                        go.Scatter3d(x=w_[:,0], y=w_[:,1], z=loss_, mode='markers')])
+  st.plotly_chart(fig)
 
 def prepare_data():
   n_samples = st.slider('Select Data Size', value=2000, min_value=100, max_value=20000, step=100)
   w = st.number_input('w', value=3)
   b = st.number_input('b', value=2)
   x,y = generate_data(n_samples, w, b)
-  # visualize_data(x,y)
-  return x,y
+  return x,y,w,b
 
 def mse(y, y_pred):
   return ((y-y_pred)**2).mean()
@@ -80,14 +82,14 @@ def fit(x, y, eta, epochs, batch_size=0):
 
   return history
 
-def train(x, y):
+def train(x, y, w0, b0):
   col1, col2, col3 = st.columns(3)
   with col1:
     eta = st.number_input('Learning Rate', value=.01, step=.01, max_value=.1, min_value=.0001)
   with col2:
-    epochs = st.slider('Epochs', step=100, min_value=100, max_value=10000)
+    epochs = st.slider('Epochs', step=100, min_value=100, max_value=5000)
   with col3:
-    batch_train = st.toggle('Batch Training')
+    batch_train = st.toggle('Mini-Batch Training')
     batch_size = st.number_input('Batch Size', min_value=1, max_value=100, value=10, step=5)
   
   if not batch_train:
@@ -95,13 +97,14 @@ def train(x, y):
   history = fit(x, y, eta, epochs, batch_size)
   st.write('Weights:', *history['weights'][-1])
   draw_result(x,y,history)
+  visualize_loss_surface(x, y, w0, b0, history)
 
 def main():
   st.header('Linear Regression')
   with st.sidebar:
-    x,y = prepare_data()
+    x,y,w,b = prepare_data()
   
-  train(x,y)
+  train(x,y,w,b)
 
 if __name__ == "__main__":
   main()
