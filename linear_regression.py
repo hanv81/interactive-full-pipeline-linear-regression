@@ -51,27 +51,6 @@ def gradient_descent(x, y, w, eta):
   w = w-eta*dw
   return w, loss
 
-def draw_result(x, y, history, w_optimal):
-  id = np.argmin(history['loss'])
-  w, b = history['weights'][id]
-  x_line = np.array([x.min(), x.max()])
-  y_line = x_line * w + b
-  y_optimal = x_line * w_optimal[0] + w_optimal[1]
-
-  fig, _ = plt.subplots(1,2)
-  fig.set_figheight(2)
-  plt.subplot(1,2,1)
-  plt.title('Regression Line')
-  plt.scatter(x,y)
-  plt.plot(x_line, y_line, c='y', label = 'GD')
-  plt.plot(x_line, y_optimal, c='r', label = 'Optimal')
-  plt.legend()
-
-  plt.subplot(1,2,2)
-  plt.title('Loss')
-  plt.plot(history['loss'])
-  st.pyplot(fig)
-
 def fit(x, y, eta, epochs, batch_size=0):
   t = time.time()
   w = np.random.rand(x.shape[1]+1)
@@ -90,6 +69,26 @@ def fit(x, y, eta, epochs, batch_size=0):
   t = (time.time() - t)*1000
   st.write('Training time:', int(t), 'ms')
   return history
+
+def draw_result(x, y, history, w_optimal):
+  w, b = history['weights'][np.argmin(history['loss'])]
+  x_line = np.array([x.min()-.5, x.max()+.5])
+  y_gd = x_line * w + b
+  y_optimal = x_line * w_optimal[0] + w_optimal[1]
+
+  fig, _ = plt.subplots(1,2)
+  fig.set_figheight(2)
+  plt.subplot(1,2,1)
+  plt.title('Regression Line')
+  plt.scatter(x,y)
+  plt.plot(x_line, y_gd, c='y', label = 'GD')
+  plt.plot(x_line, y_optimal, c='r', label = 'Optimal')
+  plt.legend()
+
+  plt.subplot(1,2,2)
+  plt.title('Loss')
+  plt.plot(history['loss'])
+  st.pyplot(fig)
 
 def train(x, y, w0, b0):
   col1, col2, col3, col4 = st.columns(4)
