@@ -91,19 +91,7 @@ def prepare_data():
   x,y = create_dataset(n_samples)
   return x,y
 
-def train(X,y):
-  col1, col2, col3 = st.columns(3)
-  with col1:
-    eta = st.number_input('Learning Rate', max_value=.1, value=.01)
-  with col2:
-    epochs = st.number_input('Epochs', value=300, step=10, min_value=10)
-  with col3:
-    batch_train = st.toggle('Mini-Batch GD')
-    batch_size = st.number_input('Batch Size', min_value=1, max_value=100, value=20, step=5)
-  threshold = st.slider('Threshold', min_value=.01, max_value=.99, value=.5, step=.01)
-  if not batch_train:
-    batch_size = 0
-
+def train(X, y, eta, epochs, batch_size, threshold):
   with st.spinner('Training...'):
     t = time.time()
     history = fit(X, y, eta, epochs, batch_size)
@@ -124,17 +112,27 @@ def train(X,y):
       y_pred_label = [0 if i < threshold else 1 for i in y_pred]
       cm = confusion_matrix(y, y_pred_label)
       fig = plt.figure()
-      sns.heatmap(cm, annot=True, cmap='Blues')
+      sns.heatmap(cm, annot=True, cmap='Blues', fmt='d')
       st.pyplot(fig)
       st.subheader('Classification Report')
       st.text(classification_report(y, y_pred_label))
 
 def main():
   st.header('Logistic Regression')
-  with st.sidebar:
+  col1, col2, col3, col4 = st.columns(4)
+  with col1:
     X,y = prepare_data()
-  
-  train(X,y)
+  with col2:
+    eta = st.number_input('Learning Rate', max_value=.1, value=.01)
+  with col3:
+    epochs = st.number_input('Epochs', value=300, step=10, min_value=10)
+  with col4:
+    batch_train = st.toggle('Mini-Batch GD')
+    batch_size = st.number_input('Batch Size', min_value=1, max_value=100, value=20, step=5)
+    if not batch_train:batch_size = 0
+  threshold = st.slider('Threshold', min_value=.01, max_value=.99, value=.5, step=.01)
+
+  train(X, y, eta, epochs, batch_size, threshold)
 
 if __name__ == "__main__":
   main()
