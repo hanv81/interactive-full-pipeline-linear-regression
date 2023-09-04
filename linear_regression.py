@@ -13,10 +13,11 @@ def generate_data(n_samples, w, b):
   y = w*x + noise + b
   return x, y
 
-def visualize_loss_surface(x, y, w0, b0, history):
+def visualize_loss_surface(x, y, w_optimal, history):
   w_ = np.array(history['weights'])
   y_pred = w_[:,0]*x + w_[:,1]
   loss_ = ((y_pred - y)**2).mean(axis=0)
+  w0,b0 = w_optimal
   w = np.linspace(w0-3, w0+3, 200)
   b = np.linspace(b0-3, b0+3, 200)
   ww, bb = np.meshgrid(w, b)
@@ -33,7 +34,7 @@ def prepare_data():
   w = st.number_input('w', value=3.)
   b = st.number_input('b', value=2.)
   x,y = generate_data(n_samples, w, b)
-  return x,y,w,b
+  return x,y
 
 def mse(y, y_pred):
   return ((y-y_pred)**2).mean()
@@ -90,7 +91,7 @@ def draw_result(x, y, history, w_optimal):
   plt.plot(history['loss'])
   st.pyplot(fig)
 
-def train(x, y, w0, b0):
+def train(x, y):
   col1, col2, col3, col4 = st.columns(4)
   with col1:
     eta = st.number_input('Learning Rate', value=.01, step=.01, max_value=.1, min_value=.0001)
@@ -112,14 +113,14 @@ def train(x, y, w0, b0):
     st.write('Weights by GD:', *history['weights'][np.argmin(history['loss'])])
   with st.spinner('Visualizing...'):
     draw_result(x, y, history, w_optimal)
-    if draw_loss:visualize_loss_surface(x, y, w0, b0, history)
+    if draw_loss:visualize_loss_surface(x, y, w_optimal, history)
 
 def main():
   st.header('Linear Regression')
   with st.sidebar:
-    x,y,w,b = prepare_data()
+    x,y = prepare_data()
   
-  train(x,y,w,b)
+  train(x,y)
 
 if __name__ == "__main__":
   main()
