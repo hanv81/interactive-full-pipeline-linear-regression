@@ -3,6 +3,9 @@ import streamlit as st
 import numpy as np
 import plotly.graph_objects as go
 import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.metrics import classification_report
+from sklearn.metrics import confusion_matrix
 
 @st.cache_data
 def create_dataset(n_samples):
@@ -56,25 +59,28 @@ def fit(X, y, ETA, EPOCHS, batch_size=0):
   return history
 
 def draw_result(X, y, history, threshold):
-  fig, _ = plt.subplots(1,2)
-  fig.set_figheight(2)
+  fig, _ = plt.subplots(2,1)
+  fig.set_figheight(12)
 
-  plt.subplot(1,2,1)
+  plt.subplot(2,1,1)
   plt.title('Decision Boundary')
-  plt.xlabel('x1')
-  plt.ylabel('x2')
-  plt.scatter(X[:, 0], X[:, 1], c=y)
+#   plt.xlabel('x1')
+#   plt.ylabel('x2')
+  plt.scatter(X[y==0, 0], X[y==0, 1], label='Class 0')
+  plt.scatter(X[y==1, 0], X[y==1, 1], label='Class 1')
+  plt.legend()
 
   x1 = np.array([X[:, 0].min()-.05, X[:, 0].max()+.05])
   w = history['weights'][np.argmin(history['loss'])]
   x2 = -(x1*w[0] + w[2])/w[1]
-  x2_t = -(x1*w[0] + w[2] + np.log(1/threshold-1))/w[1]
-  plt.plot(x1, x2)
-  plt.plot(x1, x2_t, linestyle = '--')
+  plt.plot(x1, x2, c='y')
+  if threshold != .5:
+    x2_t = -(x1*w[0] + w[2] + np.log(1/threshold-1))/w[1]
+    plt.plot(x1, x2_t, linestyle = '--', c='r')
 
-  plt.subplot(1,2,2)
+  plt.subplot(2,1,2)
   plt.title('History')
-  plt.xlabel('Epochs')
+#   plt.xlabel('Epochs')
   plt.plot(history['loss'], label='Loss')
   plt.plot(history['accuracy'], label='Accuracy')
   plt.legend()
@@ -106,14 +112,22 @@ def train(X,y):
     w = history['weights'][np.argmin(history['loss'])]
     X_ = np.concatenate((X, np.ones((X.shape[0], 1))), axis=1)
     y_pred = feed_forward(X_, w)
-    loss = bce_loss(y, y_pred)
-    acc = accuracy(y, y_pred, threshold)
-    st.write('Weights:', *history['weights'][np.argmin(history['loss'])])
-    st.write('Loss:', loss)
-    st.write('Accuracy:', acc)
+    loss = np.round(bce_loss(y, y_pred), decimals=4)
+    weights = np.round(history['weights'][np.argmin(history['loss'])], decimals=2)
+    st.write('Weights:', *weights, 'Loss:', loss)
 
   with st.spinner('Visualizing...'):
-    draw_result(X, y, history, threshold)
+    col4, col5 = st.columns(2)
+    with col4:
+      draw_result(X, y, history, threshold)
+    with col5:
+      y_pred_label = [0 if i < threshold else 1 for i in y_pred]
+      cm = confusion_matrix(y, y_pred_label)
+      fig = plt.figure()
+      sns.heatmap(cm, annot=True, cmap='Blues')
+      st.pyplot(fig)
+      st.subheader('Classification Report')
+      st.text(classification_report(y, y_pred_label))
 
 def main():
   st.header('Logistic Regression')
