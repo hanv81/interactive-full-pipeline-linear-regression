@@ -13,8 +13,7 @@ def generate_data(n_samples, w, b):
 
 def visualize_loss_surface(x, y, w_optimal, history):
   w_ = np.array(history['weights'])
-  y_pred = w_[:,0]*x + w_[:,1]
-  loss_ = ((y_pred - y)**2).mean(axis=0)
+  loss_ = np.array(history['loss'])
   w0,b0 = w_optimal
   w = np.linspace(w0-3, w0+3, 200)
   b = np.linspace(b0-3, b0+3, 200)
