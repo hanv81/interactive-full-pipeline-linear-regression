@@ -3,8 +3,6 @@ import streamlit as st
 import numpy as np
 import plotly.graph_objects as go
 import matplotlib.pyplot as plt
-import numpy as np
-import matplotlib.pyplot as plt
 
 @st.cache_data
 def generate_data(n_samples, w, b):
@@ -113,7 +111,7 @@ def train(x, y):
     st.write('Weights by GD:', *history['weights'][np.argmin(history['loss'])])
   with st.spinner('Visualizing...'):
     draw_result(x, y, history, w_optimal)
-    if draw_loss:visualize_loss_surface(x, y, w_optimal, history)
+    if draw_loss:visualize_loss_surface(x, y, w_optimal.flatten(), history)
 
 def main():
   st.header('Linear Regression')
