@@ -10,15 +10,9 @@ from sklearn.cluster import KMeans
 
 @st.cache_data
 def create_dataset(n = 300):
-  means = [[2, 2], [8, 3], [3, 6]]
+  means = [0, 0]
   cov = [[1, 0], [0, 1]]
-  X0 = np.random.multivariate_normal(means[0], cov, n)
-  X1 = np.random.multivariate_normal(means[1], cov, n)
-  X2 = np.random.multivariate_normal(means[2], cov, n)
-
-  X = np.concatenate((X0, X1, X2), axis = 0)
-
-  return X
+  return np.random.multivariate_normal(means, cov, n)
 
 e = .1e-10
 
@@ -125,7 +119,6 @@ def main():
     n_samples = st.number_input('Number of Samples', value=100, min_value=50, max_value=1000, step=50)
     X = create_dataset(n_samples)
     n_clusters = st.number_input('Number of Clusters', value=3, min_value=2, max_value=10)
-    
 
   with col2:
     eta = st.number_input('Learning Rate', max_value=.1, value=.01)
