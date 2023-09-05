@@ -96,6 +96,30 @@ def draw_result(x, y, history, history_batch, w_optimal):
   fig.update_layout(height=500, width=800)
   st.plotly_chart(fig)
 
+def draw_result_3d(x, y, history, history_batch):
+  w_batch = history['weights'][np.argmin(history['loss'])]
+  x_plane = [x[:,0].min(), x[:,0].max()]
+  y_plane = [x[:,1].min(), x[:,1].max()]
+  xx, yy = np.meshgrid(x_plane, y_plane)
+  xy = np.c_[xx.ravel(), yy.ravel()]
+  z_batch = xy[:,0]*w_batch[0] + xy[:,1]*w_batch[1] + w_batch[2]
+  fig = make_subplots(rows=1, cols=2, subplot_titles=('Regression Plane', 'Loss'),
+                      specs=[[{"type": "scatter3d"}, {"type": "scatter"}]])
+
+  fig.add_trace(go.Scatter3d(x=x[:,0], y=x[:,1], z=y.flatten(), mode='markers', name='Data'), row=1, col=1)
+  fig.add_trace(go.Surface(x=x_plane, y=y_plane, z=z_batch.reshape(xx.shape), name='Batch'), row=1, col=1)
+
+  if history_batch:
+    w_minibatch = history_batch['weights'][np.argmin(history_batch['loss'])]
+    z_minibatch = xy[:,0]*w_minibatch[0] + xy[:,1]*w_minibatch[1] + w_minibatch[2]
+    fig.add_trace(go.Surface(x=x_plane, y=y_plane, z=z_minibatch.reshape(xx.shape), name='Mini-batch'), row=1, col=1)
+    fig.add_trace(go.Scatter(y=history_batch['loss'], name='Mini-batch'), row=1, col=2)
+  fig.add_trace(go.Scatter(y=history['loss'], name='Batch', line = dict(color='magenta')), row=1, col=2)
+
+  fig.update_xaxes(title_text="Epochs", row=1, col=2)
+  fig.update_layout(height=500, width=800)
+  st.plotly_chart(fig)
+
 def train(x, y, eta, epochs, batch_train, batch_size, draw_loss, show_training_result):
   with st.spinner('Training...'):
     history, t = fit(x, y, eta, epochs)
@@ -111,9 +135,13 @@ def train(x, y, eta, epochs, batch_train, batch_size, draw_loss, show_training_r
       st.write('Optimal weights:', *w_optimal.flatten().round(decimals=4))
       st.write('Batch GD Weights:', *w_gd, 'Training Time:', t, 'ms')
       if batch_train:st.write('Mini-batch GD Weights:', *w_gd_batch, 'Training Time:', t_batch, 'ms')
+
   with st.spinner('Visualizing...'):
-    draw_result(x, y, history, history_batch, w_optimal)
-    if draw_loss:visualize_loss_surface(x, y, w_optimal.flatten(), history)
+    if x.shape[1] == 1:
+      draw_result(x, y, history, history_batch, w_optimal)
+      if draw_loss:visualize_loss_surface(x, y, w_optimal.flatten(), history)
+    elif x.shape[1] == 2:
+      draw_result_3d(x, y, history, history_batch)
 
 def main():
   st.header('Linear Regression')
