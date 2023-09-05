@@ -51,6 +51,7 @@ def gradient_descent(x, y, w, eta):
   w = w-eta*dw
   return w, loss
 
+@st.cache_data
 def fit(x, y, eta, epochs, batch_size=0):
   t = time.time()
   w = np.random.rand(x.shape[1]+1)
