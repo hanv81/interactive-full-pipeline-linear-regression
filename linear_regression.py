@@ -5,11 +5,18 @@ import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 
 @st.cache_data
-def generate_data(n_samples, w, b):
-  x = np.random.randn(n_samples,1)
-  noise = np.random.randn(n_samples,1)
-  y = w*x + noise + b
-  return x, y
+def generate_data(n_samples, n_features):
+  x = np.random.randn(n_samples, n_features)
+  x_ = np.concatenate((x, np.ones((x.shape[0], 1))), axis=1)
+  w = np.random.randint(-10,10,n_features + 1)
+  noise = np.random.randn(n_samples)
+  y = (x_*w).sum(axis=1) + noise
+  return x, y.reshape(-1,1)
+
+def prepare_data():
+  n_samples = st.slider('Number of Samples', value=1000, min_value=100, max_value=10000, step=500)
+  x,y = generate_data(n_samples,1)
+  return x,y
 
 def visualize_loss_surface(x, y, w_optimal, history):
   w_ = np.array(history['weights'])
@@ -25,13 +32,6 @@ def visualize_loss_surface(x, y, w_optimal, history):
                         go.Scatter3d(x=w_[:,0], y=w_[:,1], z=loss_, mode='markers'),
                         go.Scatter3d(x=w_[[0,-1],0], y=w_[[0,-1],1], z=loss_[[0,-1]], mode='markers')])
   st.plotly_chart(fig)
-
-def prepare_data():
-  n_samples = st.slider('Select Data Size', value=2000, min_value=100, max_value=10000, step=100)
-  w = st.number_input('w', value=3.)
-  b = st.number_input('b', value=2.)
-  x,y = generate_data(n_samples, w, b)
-  return x,y
 
 def mse(y, y_pred):
   return ((y-y_pred)**2).mean()
@@ -93,18 +93,7 @@ def draw_result(x, y, history, history_batch, w_optimal):
   plt.legend()
   st.pyplot(fig)
 
-def train(x, y):
-  col1, col2, col3, col4 = st.columns(4)
-  with col1:
-    eta = st.number_input('Learning Rate', value=.01, step=.01, max_value=.1, min_value=.0001)
-  with col2:
-    epochs = st.number_input('Epochs', value=100, step=10, min_value=10)
-  with col3:
-    batch_train = st.toggle('Mini-Batch GD')
-    batch_size = st.number_input('Batch Size', min_value=1, max_value=100, value=10, step=5)
-  with col4:
-    draw_loss = st.toggle('Draw Loss Surface')
-  
+def train(x, y, eta, epochs, batch_train, batch_size, draw_loss):
   with st.spinner('Training...'):
     history, t = fit(x, y, eta, epochs)
     if batch_train:
@@ -124,10 +113,19 @@ def train(x, y):
 
 def main():
   st.header('Linear Regression')
-  with st.sidebar:
+  col1, col2, col3, col4 = st.columns(4)
+  with col1:
     x,y = prepare_data()
-  
-  train(x,y)
+  with col2:
+    eta = st.number_input('Learning Rate', value=.01, step=.01, max_value=.1, min_value=.0001)
+    epochs = st.number_input('Epochs', value=100, step=50, min_value=10)
+  with col3:
+    batch_train = st.toggle('Mini-Batch GD')
+    batch_size = st.number_input('Batch Size', min_value=1, max_value=100, value=10, step=5)
+  with col4:
+    draw_loss = st.toggle('Draw Loss Surface')
+
+  train(x, y, eta, epochs, batch_train, batch_size, draw_loss)
 
 if __name__ == "__main__":
   main()
