@@ -64,11 +64,10 @@ def fit(x, y, eta, epochs, batch_size=0):
     w, loss = gradient_descent(xx, yy, w, eta)
     history['loss'].append(loss)
 
-  t = (time.time() - t)*1000
-  st.write('Training time:', int(t), 'ms')
-  return history
+  t = int((time.time() - t)*1000)
+  return history, t
 
-def draw_result(x, y, history, w_optimal):
+def draw_result(x, y, history, history_batch, w_optimal):
   w, b = history['weights'][np.argmin(history['loss'])]
   x_line = np.array([x.min()-.5, x.max()+.5])
   y_gd = x_line * w + b
@@ -79,13 +78,19 @@ def draw_result(x, y, history, w_optimal):
   plt.subplot(1,2,1)
   plt.title('Regression Line')
   plt.scatter(x,y)
-  plt.plot(x_line, y_gd, c='y', label = 'GD')
-  plt.plot(x_line, y_optimal, c='r', label = 'Optimal')
+  plt.plot(x_line, y_gd, c='y', label = 'Batch GD')
+  plt.plot(x_line, y_optimal, c='r', linestyle = '--')
+  if history_batch is not None:
+    w, b = history_batch['weights'][np.argmin(history_batch['loss'])]
+    y_gd_batch = x_line * w + b
+    plt.plot(x_line, y_gd_batch, c='g', label = 'Mini-batch GD')
   plt.legend()
 
   plt.subplot(1,2,2)
   plt.title('Loss')
-  plt.plot(history['loss'])
+  if history_batch:plt.plot(history_batch['loss'], label='Mini-batch GD')
+  plt.plot(history['loss'], label='Batch GD')
+  plt.legend()
   st.pyplot(fig)
 
 def train(x, y):
@@ -100,17 +105,21 @@ def train(x, y):
   with col4:
     draw_loss = st.toggle('Draw Loss Surface')
   
-  if not batch_train:
-    batch_size = 0
   with st.spinner('Training...'):
-    history = fit(x, y, eta, epochs, batch_size)
+    history, t = fit(x, y, eta, epochs)
+    if batch_train:
+      history_batch, t_batch = fit(x, y, eta, epochs, batch_size)
+      w_gd_batch = np.round(history_batch['weights'][np.argmin(history_batch['loss'])], 4)
+    else:
+      history_batch, t_batch = None, None
     x_ = np.concatenate((x, np.ones((x.shape[0], 1))), axis=1)
     w_optimal = np.linalg.pinv(x_.T @ x_) @ x_.T @ y
     w_gd = np.round(history['weights'][np.argmin(history['loss'])], 4)
     st.write('Optimal weights:', *w_optimal.flatten().round(decimals=4))
-    st.write('GD Weights:', *w_gd)
+    st.write('Batch GD Weights:', *w_gd, 'Training Time:', t, 'ms')
+    if batch_train:st.write('Mini-batch GD Weights:', *w_gd_batch, 'Training Time:', t_batch, 'ms')
   with st.spinner('Visualizing...'):
-    draw_result(x, y, history, w_optimal)
+    draw_result(x, y, history, history_batch, w_optimal)
     if draw_loss:visualize_loss_surface(x, y, w_optimal.flatten(), history)
 
 def main():
