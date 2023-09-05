@@ -2,7 +2,8 @@ import time
 import streamlit as st
 import numpy as np
 import plotly.graph_objects as go
-import matplotlib.pyplot as plt
+import plotly.express as px
+from plotly.subplots import make_subplots
 
 @st.cache_data
 def generate_data(n_samples, n_features):
@@ -14,8 +15,9 @@ def generate_data(n_samples, n_features):
   return x, y.reshape(-1,1)
 
 def prepare_data():
-  n_samples = st.slider('Number of Samples', value=1000, min_value=100, max_value=10000, step=500)
-  x,y = generate_data(n_samples,1)
+  n_samples = st.number_input('Number of Samples', value=1000, min_value=100, max_value=10000, step=500)
+  n_features = st.number_input('Number of Features', value=1, min_value=1, max_value=5, step=1)
+  x,y = generate_data(n_samples, n_features)
   return x,y
 
 def visualize_loss_surface(x, y, w_optimal, history):
@@ -73,30 +75,28 @@ def draw_result(x, y, history, history_batch, w_optimal):
   y_gd = x_line * w + b
   y_optimal = x_line * w_optimal[0] + w_optimal[1]
 
-  fig, _ = plt.subplots(1,2)
-  fig.set_figheight(2)
-  plt.subplot(1,2,1)
-  plt.title('Regression Line')
-  plt.xlabel('x')
-  plt.ylabel('y')
-  plt.scatter(x,y)
-  plt.plot(x_line, y_gd, c='y', label = 'Batch GD')
-  plt.plot(x_line, y_optimal, c='r', linestyle = '--')
-  if history_batch is not None:
+  fig = make_subplots(rows=1, cols=2, subplot_titles=('Regression Line', 'Loss'))
+  fig.add_trace(go.Scatter(x=x.flatten(), y=y.flatten(), mode='markers', name='Data'), row=1, col=1)
+  fig.add_trace(go.Scatter(x=x_line.flatten(), y=y_optimal.flatten(), mode='lines', name='Optimal',
+                           line = dict(color='red', width=4, dash='dash')), row=1, col=1)
+  fig.add_trace(go.Scatter(x=x_line.flatten(), y=y_gd.flatten(), mode='lines', name='Batch',
+                           line = dict(color='green')), row=1, col=1)
+  if history_batch:
     w, b = history_batch['weights'][np.argmin(history_batch['loss'])]
     y_gd_batch = x_line * w + b
-    plt.plot(x_line, y_gd_batch, c='g', label = 'Mini-batch GD')
-  plt.legend()
+    fig.add_trace(go.Scatter(x=x_line.flatten(), y=y_gd_batch.flatten(), mode='lines', name='Mini-batch',
+                           line = dict(color='tomato')), row=1, col=1)
+    fig.add_trace(go.Scatter(y=history_batch['loss'], name='Mini-batch'), row=1, col=2)
 
-  plt.subplot(1,2,2)
-  plt.title('Loss')
-  plt.xlabel('Epochs')
-  if history_batch:plt.plot(history_batch['loss'], label='Mini-batch GD')
-  plt.plot(history['loss'], label='Batch GD')
-  plt.legend()
-  st.pyplot(fig)
+  fig.add_trace(go.Scatter(y=history['loss'], name='Batch', line = dict(color='magenta')), row=1, col=2)
+  fig.update_xaxes(title_text="x", row=1, col=1)
+  fig.update_xaxes(title_text="Epochs", row=1, col=2)
+  fig.update_yaxes(title_text="y", row=1, col=1)
+  
+  fig.update_layout(height=500, width=800)
+  st.plotly_chart(fig)
 
-def train(x, y, eta, epochs, batch_train, batch_size, draw_loss):
+def train(x, y, eta, epochs, batch_train, batch_size, draw_loss, show_training_result):
   with st.spinner('Training...'):
     history, t = fit(x, y, eta, epochs)
     if batch_train:
@@ -107,9 +107,10 @@ def train(x, y, eta, epochs, batch_train, batch_size, draw_loss):
     x_ = np.concatenate((x, np.ones((x.shape[0], 1))), axis=1)
     w_optimal = np.linalg.pinv(x_.T @ x_) @ x_.T @ y
     w_gd = np.round(history['weights'][np.argmin(history['loss'])], 4)
-    st.write('Optimal weights:', *w_optimal.flatten().round(decimals=4))
-    st.write('Batch GD Weights:', *w_gd, 'Training Time:', t, 'ms')
-    if batch_train:st.write('Mini-batch GD Weights:', *w_gd_batch, 'Training Time:', t_batch, 'ms')
+    if show_training_result:
+      st.write('Optimal weights:', *w_optimal.flatten().round(decimals=4))
+      st.write('Batch GD Weights:', *w_gd, 'Training Time:', t, 'ms')
+      if batch_train:st.write('Mini-batch GD Weights:', *w_gd_batch, 'Training Time:', t_batch, 'ms')
   with st.spinner('Visualizing...'):
     draw_result(x, y, history, history_batch, w_optimal)
     if draw_loss:visualize_loss_surface(x, y, w_optimal.flatten(), history)
@@ -126,9 +127,10 @@ def main():
     batch_train = st.toggle('Mini-Batch GD')
     batch_size = st.number_input('Batch Size', min_value=1, max_value=100, value=10, step=5)
   with col4:
+    show_training_result = st.toggle('Show Training Info')
     draw_loss = st.toggle('Draw Loss Surface')
 
-  train(x, y, eta, epochs, batch_train, batch_size, draw_loss)
+  train(x, y, eta, epochs, batch_train, batch_size, draw_loss, show_training_result)
 
 if __name__ == "__main__":
   main()
