@@ -99,11 +99,11 @@ def draw_result(x, y, history, history_batch, w_optimal):
 def train(x, y, eta, epochs, batch_train, batch_size, draw_loss, show_training_result):
   with st.spinner('Training...'):
     history, t = fit(x, y, eta, epochs)
+    history_batch = None
     if batch_train:
       history_batch, t_batch = fit(x, y, eta, epochs, batch_size)
       w_gd_batch = np.round(history_batch['weights'][np.argmin(history_batch['loss'])], 4)
-    else:
-      history_batch, t_batch = None, None
+
     x_ = np.concatenate((x, np.ones((x.shape[0], 1))), axis=1)
     w_optimal = np.linalg.pinv(x_.T @ x_) @ x_.T @ y
     w_gd = np.round(history['weights'][np.argmin(history['loss'])], 4)
@@ -127,10 +127,10 @@ def main():
     batch_train = st.toggle('Mini-Batch GD')
     batch_size = st.number_input('Batch Size', min_value=1, max_value=100, value=10, step=5)
   with col4:
-    show_training_result = st.toggle('Show Training Info')
+    show_training_info = st.toggle('Show Training Info')
     draw_loss = st.toggle('Draw Loss Surface')
 
-  train(x, y, eta, epochs, batch_train, batch_size, draw_loss, show_training_result)
+  train(x, y, eta, epochs, batch_train, batch_size, draw_loss, show_training_info)
 
 if __name__ == "__main__":
   main()
