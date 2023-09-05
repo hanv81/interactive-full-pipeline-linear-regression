@@ -77,6 +77,8 @@ def draw_result(x, y, history, history_batch, w_optimal):
   fig.set_figheight(2)
   plt.subplot(1,2,1)
   plt.title('Regression Line')
+  plt.xlabel('x')
+  plt.ylabel('y')
   plt.scatter(x,y)
   plt.plot(x_line, y_gd, c='y', label = 'Batch GD')
   plt.plot(x_line, y_optimal, c='r', linestyle = '--')
@@ -88,6 +90,7 @@ def draw_result(x, y, history, history_batch, w_optimal):
 
   plt.subplot(1,2,2)
   plt.title('Loss')
+  plt.xlabel('Epochs')
   if history_batch:plt.plot(history_batch['loss'], label='Mini-batch GD')
   plt.plot(history['loss'], label='Batch GD')
   plt.legend()
