@@ -120,6 +120,13 @@ def draw_result_3d(x, y, history, history_batch):
   fig.update_layout(height=500, width=800)
   st.plotly_chart(fig)
 
+def draw_loss_history(history, history_batch):
+  data = [go.Scatter(y = history_batch['loss'], mode = 'lines', name='Mini-batch')] if history_batch else []
+  data.append(go.Scatter(y = history['loss'], mode = 'lines', name='Batch', line = dict(color='magenta')))
+  fig = go.Figure(data)
+  fig.update_layout(xaxis_title="Epochs", yaxis_title="Loss")
+  st.plotly_chart(fig)
+
 def train(x, y, eta, epochs, batch_train, batch_size, draw_loss, show_training_result):
   with st.spinner('Training...'):
     history, t = fit(x, y, eta, epochs)
@@ -142,6 +149,8 @@ def train(x, y, eta, epochs, batch_train, batch_size, draw_loss, show_training_r
       if draw_loss:visualize_loss_surface(x, y, w_optimal.flatten(), history)
     elif x.shape[1] == 2:
       draw_result_3d(x, y, history, history_batch)
+    else:
+      draw_loss_history(history, history_batch)
 
 def main():
   st.header('Linear Regression')
