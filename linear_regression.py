@@ -106,8 +106,9 @@ def train(x, y):
     history = fit(x, y, eta, epochs, batch_size)
     x_ = np.concatenate((x, np.ones((x.shape[0], 1))), axis=1)
     w_optimal = np.linalg.pinv(x_.T @ x_) @ x_.T @ y
-    st.write('Optimal weights:', *w_optimal.flatten())
-    st.write('Weights by GD:', *history['weights'][np.argmin(history['loss'])])
+    w_gd = np.round(history['weights'][np.argmin(history['loss'])], 4)
+    st.write('Optimal weights:', *w_optimal.flatten().round(decimals=4))
+    st.write('GD Weights:', *w_gd)
   with st.spinner('Visualizing...'):
     draw_result(x, y, history, w_optimal)
     if draw_loss:visualize_loss_surface(x, y, w_optimal.flatten(), history)
