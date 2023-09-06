@@ -147,7 +147,9 @@ def train(x, y, eta, epochs, batch_train, batch_size, draw_loss, show_training_r
   with st.spinner('Visualizing...'):
     if x.shape[1] == 1:
       draw_result(x, y, history, history_batch, w_optimal)
-      if draw_loss:visualize_loss_surface(x, y, w_optimal.flatten(), history)
+      if draw_loss:
+        if batch_train:visualize_loss_surface(x, y, w_optimal.flatten(), history_batch)
+        else:visualize_loss_surface(x, y, w_optimal.flatten(), history)
     elif x.shape[1] == 2:
       draw_result_3d(x, y, history, history_batch)
     else:
