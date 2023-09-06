@@ -35,6 +35,7 @@ def back_propagation(w, dw, eta):
 def generate_weights(n_features):
   return np.random.rand(n_features+1)
 
+@st.cache_data
 def fit(X, y, ETA, EPOCHS, batch_size=0):
   w = generate_weights(X.shape[1])
   X_ = np.concatenate((X, np.ones((X.shape[0], 1))), axis=1)
@@ -96,13 +97,11 @@ def train(X, y, eta, epochs, batch_size, threshold):
     t = time.time()
     history = fit(X, y, eta, epochs, batch_size)
     t = (time.time() - t)*1000
-    st.write('Training time:', int(t), 'ms')
     w = history['weights'][np.argmin(history['loss'])]
     X_ = np.concatenate((X, np.ones((X.shape[0], 1))), axis=1)
     y_pred = feed_forward(X_, w)
     loss = np.round(bce_loss(y, y_pred), decimals=4)
-    weights = np.round(history['weights'][np.argmin(history['loss'])], decimals=2)
-    st.write('Weights:', *weights, 'Loss:', loss)
+    st.write('Training time:', int(t), '(ms). Loss:', loss)
 
   with st.spinner('Visualizing...'):
     col4, col5 = st.columns(2)
