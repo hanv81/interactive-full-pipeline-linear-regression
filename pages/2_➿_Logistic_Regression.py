@@ -64,8 +64,8 @@ def draw_result(X, y, history, threshold):
 
   plt.subplot(2,1,1)
   plt.title('Decision Boundary')
-#   plt.xlabel('x1')
-#   plt.ylabel('x2')
+  plt.xlabel('x1')
+  plt.ylabel('x2')
   plt.scatter(X[y==0, 0], X[y==0, 1], label='Class 0')
   plt.scatter(X[y==1, 0], X[y==1, 1], label='Class 1')
   plt.legend()
@@ -76,11 +76,12 @@ def draw_result(X, y, history, threshold):
   plt.plot(x1, x2, c='y')
   if threshold != .5:
     x2_t = -(x1*w[0] + w[2] + np.log(1/threshold-1))/w[1]
-    plt.plot(x1, x2_t, linestyle = '--', c='r')
+    plt.plot(x1, x2_t, linestyle = '--', c='r', label=f't={threshold}')
+    plt.legend()
 
   plt.subplot(2,1,2)
   plt.title('History')
-#   plt.xlabel('Epochs')
+  plt.xlabel('Epochs')
   plt.plot(history['loss'], label='Loss')
   plt.plot(history['accuracy'], label='Accuracy')
   plt.legend()
