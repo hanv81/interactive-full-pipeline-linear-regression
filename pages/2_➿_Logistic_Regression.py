@@ -68,7 +68,6 @@ def draw_result(X, y, history, threshold):
   plt.ylabel('x2')
   plt.scatter(X[y==0, 0], X[y==0, 1], label='Class 0')
   plt.scatter(X[y==1, 0], X[y==1, 1], label='Class 1')
-  plt.legend()
 
   x1 = np.array([X[:, 0].min()-.05, X[:, 0].max()+.05])
   w = history['weights'][np.argmin(history['loss'])]
@@ -77,7 +76,7 @@ def draw_result(X, y, history, threshold):
   if threshold != .5:
     x2_t = -(x1*w[0] + w[2] + np.log(1/threshold-1))/w[1]
     plt.plot(x1, x2_t, linestyle = '--', c='r', label=f't={threshold}')
-    plt.legend()
+  plt.legend()
 
   plt.subplot(2,1,2)
   plt.title('History')
