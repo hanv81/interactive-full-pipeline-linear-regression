@@ -87,11 +87,6 @@ def draw_result(X, y, history, threshold):
   plt.legend()
   st.pyplot(fig)
 
-def prepare_data():
-  n_samples = st.number_input('Number of Samples', value=200, min_value=100, max_value=10000, step=100)
-  x,y = create_dataset(n_samples)
-  return x,y
-
 def train(X, y, eta, epochs, batch_size):
   t = time.time()
   X_ = np.concatenate((X, np.ones((X.shape[0], 1))), axis=1)
@@ -121,7 +116,7 @@ def main():
   st.header('Logistic Regression')
   col1, col2, col3, col4 = st.columns(4)
   with col1:
-    X,y = prepare_data()
+    n_samples = st.number_input('Number of Samples', value=200, min_value=100, max_value=10000, step=100)
   with col2:
     eta = st.number_input('Learning Rate', max_value=.1, value=.01)
   with col3:
@@ -132,6 +127,7 @@ def main():
     if not batch_train:batch_size = 0
   threshold = st.slider('Threshold', min_value=.01, max_value=.99, value=.5, step=.01)
 
+  X,y = create_dataset(n_samples)
   history, y_pred = train(X, y, eta, epochs, batch_size)
   show_result(X, y, y_pred, history, threshold)
 
