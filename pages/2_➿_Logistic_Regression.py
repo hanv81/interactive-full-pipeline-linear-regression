@@ -4,6 +4,7 @@ import numpy as np
 import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 import seaborn as sns
+from stqdm import stqdm
 from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
 
@@ -36,11 +37,10 @@ def generate_weights(n_features):
   return np.random.rand(n_features+1)
 
 @st.cache_data
-def fit(X, y, ETA, EPOCHS, batch_size=0):
+def fit(X, X_, y, ETA, EPOCHS, batch_size=0):
   w = generate_weights(X.shape[1])
-  X_ = np.concatenate((X, np.ones((X.shape[0], 1))), axis=1)
   history = {'loss':[], 'accuracy':[], 'weights':[]}
-  for i in range(EPOCHS):
+  for i in stqdm(range(EPOCHS)):
     if batch_size > 0:
       id = np.random.choice(len(y), batch_size)
       XX, yy = X_[id], y[id]
@@ -92,17 +92,18 @@ def prepare_data():
   x,y = create_dataset(n_samples)
   return x,y
 
-def train(X, y, eta, epochs, batch_size, threshold):
-  with st.spinner('Training...'):
-    t = time.time()
-    history = fit(X, y, eta, epochs, batch_size)
-    t = (time.time() - t)*1000
-    w = history['weights'][np.argmin(history['loss'])]
-    X_ = np.concatenate((X, np.ones((X.shape[0], 1))), axis=1)
-    y_pred = feed_forward(X_, w)
-    loss = np.round(bce_loss(y, y_pred), decimals=4)
-    st.write('Training time:', int(t), '(ms). Loss:', loss)
+def train(X, y, eta, epochs, batch_size):
+  t = time.time()
+  X_ = np.concatenate((X, np.ones((X.shape[0], 1))), axis=1)
+  history = fit(X, X_, y, eta, epochs, batch_size)
+  t = (time.time() - t)*1000
+  w = history['weights'][np.argmin(history['loss'])]
+  y_pred = feed_forward(X_, w)
+  loss = np.round(bce_loss(y, y_pred), decimals=4)
+  st.write('Training time:', int(t), '(ms). Loss:', loss)
+  return history, y_pred
 
+def show_result(X, y, y_pred, history, threshold):
   with st.spinner('Visualizing...'):
     col4, col5 = st.columns(2)
     with col4:
@@ -131,7 +132,8 @@ def main():
     if not batch_train:batch_size = 0
   threshold = st.slider('Threshold', min_value=.01, max_value=.99, value=.5, step=.01)
 
-  train(X, y, eta, epochs, batch_size, threshold)
+  history, y_pred = train(X, y, eta, epochs, batch_size)
+  show_result(X, y, y_pred, history, threshold)
 
 if __name__ == "__main__":
   main()

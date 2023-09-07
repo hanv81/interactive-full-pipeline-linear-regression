@@ -7,6 +7,7 @@ import seaborn as sns
 from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
 from sklearn.cluster import KMeans
+from stqdm import stqdm
 
 @st.cache_data
 def create_dataset(n = 300):
@@ -54,6 +55,7 @@ def kmeans(X, n_clusters):
       return centers, y
     centers = centers_new
 
+@st.cache_data
 def train(X, y, ETA, EPOCHS, batch_size=0):
   t = time.time()
   
@@ -61,7 +63,7 @@ def train(X, y, ETA, EPOCHS, batch_size=0):
   W = generate_weights(int(max(y))+1, X.shape[1])
   history = {'loss':[], 'accuracy':[], 'weights':[]}
   X_ = np.concatenate((X, np.ones((X.shape[0], 1))), axis=1)
-  for i in range(EPOCHS):
+  for i in stqdm(range(EPOCHS)):
     if batch_size > 0:
       id = np.random.choice(len(y), batch_size)
       XX, yy, yy_ohe = X_[id], y[id], y_ohe[id]
@@ -129,11 +131,8 @@ def main():
     batch_size = st.number_input('Batch Size', min_value=1, max_value=100, value=20, step=5)
     if not batch_train:batch_size = 0
 
-  with st.spinner('Clustering'):
-    centers, y = kmeans(X, n_clusters)
-  with st.spinner('Training...'):
-    history = train(X, y, eta, epochs, batch_size)
-
+  centers, y = kmeans(X, n_clusters)
+  history = train(X, y, eta, epochs, batch_size)
   draw_result(X, y, centers, history)
 
 if __name__ == "__main__":
