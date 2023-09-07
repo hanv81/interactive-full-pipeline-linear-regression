@@ -89,7 +89,7 @@ def draw_result(x, y, history, history_batch, w_optimal):
                            line = dict(color='tomato')), row=1, col=1)
     fig.add_trace(go.Scatter(y=history_batch['loss'], name='Mini-batch'), row=1, col=2)
 
-  fig.add_trace(go.Scatter(y=history['loss'], name='Batch', line = dict(color='magenta')), row=1, col=2)
+  fig.add_trace(go.Scatter(y=history['loss'], mode='lines', name='Batch', line = dict(color='magenta')), row=1, col=2)
   fig.update_xaxes(title_text="x", row=1, col=1)
   fig.update_xaxes(title_text="Epochs", row=1, col=2)
   fig.update_yaxes(title_text="y", row=1, col=1)
