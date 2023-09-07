@@ -4,6 +4,7 @@ import numpy as np
 import plotly.graph_objects as go
 import plotly.express as px
 from plotly.subplots import make_subplots
+from stqdm import stqdm
 
 @st.cache_data
 def generate_data(n_samples, n_features):
@@ -57,7 +58,7 @@ def fit(x, y, eta, epochs, batch_size=0):
   w = np.random.rand(x.shape[1]+1)
   history = {'loss':[], 'weights':[]}
   x_ = np.concatenate((x, np.ones((x.shape[0], 1))), axis=1)
-  for i in range(epochs):
+  for _ in stqdm(range(epochs)):
     if batch_size > 0:
       id = np.random.choice(len(y), batch_size)
       xx, yy = x_[id], y[id]
@@ -129,20 +130,19 @@ def draw_loss_history(history, history_batch):
   st.plotly_chart(fig)
 
 def train(x, y, eta, epochs, batch_train, batch_size, draw_loss, show_training_result):
-  with st.spinner('Training...'):
-    history, t = fit(x, y, eta, epochs)
-    history_batch = None
-    if batch_train:
-      history_batch, t_batch = fit(x, y, eta, epochs, batch_size)
-      w_gd_batch = np.round(history_batch['weights'][np.argmin(history_batch['loss'])], 4)
+  history, t = fit(x, y, eta, epochs)
+  history_batch = None
+  if batch_train:
+    history_batch, t_batch = fit(x, y, eta, epochs, batch_size)
+    w_gd_batch = np.round(history_batch['weights'][np.argmin(history_batch['loss'])], 4)
 
-    x_ = np.concatenate((x, np.ones((x.shape[0], 1))), axis=1)
-    w_optimal = np.linalg.pinv(x_.T @ x_) @ x_.T @ y
-    w_gd = np.round(history['weights'][np.argmin(history['loss'])], 4)
-    if show_training_result:
-      st.write('Optimal weights:', *w_optimal.flatten().round(decimals=4))
-      st.write('Batch GD Weights:', *w_gd, 'Training Time:', t, 'ms')
-      if batch_train:st.write('Mini-batch GD Weights:', *w_gd_batch, 'Training Time:', t_batch, 'ms')
+  x_ = np.concatenate((x, np.ones((x.shape[0], 1))), axis=1)
+  w_optimal = np.linalg.pinv(x_.T @ x_) @ x_.T @ y
+  w_gd = np.round(history['weights'][np.argmin(history['loss'])], 4)
+  if show_training_result:
+    st.write('Optimal weights:', *w_optimal.flatten().round(decimals=4))
+    st.write('Batch GD Weights:', *w_gd, 'Training Time:', t, 'ms')
+    if batch_train:st.write('Mini-batch GD Weights:', *w_gd_batch, 'Training Time:', t_batch, 'ms')
 
   with st.spinner('Visualizing...'):
     if x.shape[1] == 1:
