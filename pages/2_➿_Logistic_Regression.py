@@ -37,9 +37,10 @@ def generate_weights(n_features):
   return np.random.rand(n_features+1)
 
 @st.cache_data
-def fit(X, X_, y, ETA, EPOCHS, batch_size=0):
+def fit(X, y, ETA, EPOCHS, batch_size=0):
   w = generate_weights(X.shape[1])
   history = {'loss':[], 'accuracy':[], 'weights':[]}
+  X_ = np.concatenate((X, np.ones((X.shape[0], 1))), axis=1)
   for i in stqdm(range(EPOCHS)):
     if batch_size > 0:
       id = np.random.choice(len(y), batch_size)
@@ -59,7 +60,7 @@ def fit(X, X_, y, ETA, EPOCHS, batch_size=0):
 
   return history
 
-def draw_result(X, y, history, threshold):
+def draw_result(X, y, history, history_batch, threshold):
   fig, _ = plt.subplots(2,1)
   fig.set_figheight(12)
 
@@ -71,7 +72,7 @@ def draw_result(X, y, history, threshold):
   plt.scatter(X[y==1, 0], X[y==1, 1], label='Class 1')
 
   x1 = np.array([X[:, 0].min()-.05, X[:, 0].max()+.05])
-  w = history['weights'][np.argmin(history['loss'])]
+  w = history['weights'][-1]
   x2 = -(x1*w[0] + w[2])/w[1]
   plt.plot(x1, x2, c='y')
   if threshold != .5:
@@ -84,26 +85,27 @@ def draw_result(X, y, history, threshold):
   plt.xlabel('Epochs')
   plt.plot(history['loss'], label='Loss')
   plt.plot(history['accuracy'], label='Accuracy')
+  if history_batch:
+    plt.plot(history_batch['loss'], label='Mini-batch Loss')
+
   plt.legend()
   st.pyplot(fig)
 
-def train(X, y, eta, epochs, batch_size):
+def train(X, y, eta, epochs, batch_size=0):
   t = time.time()
-  X_ = np.concatenate((X, np.ones((X.shape[0], 1))), axis=1)
-  history = fit(X, X_, y, eta, epochs, batch_size)
+  history = fit(X, y, eta, epochs, batch_size)
   t = (time.time() - t)*1000
-  w = history['weights'][np.argmin(history['loss'])]
-  y_pred = feed_forward(X_, w)
-  loss = np.round(bce_loss(y, y_pred), decimals=4)
-  st.write('Training time:', int(t), '(ms). Loss:', loss)
-  return history, y_pred
+  return history, int(t)
 
-def show_result(X, y, y_pred, history, threshold):
+def show_result(X, y, history, history_batch, threshold):
   with st.spinner('Visualizing...'):
     col4, col5 = st.columns(2)
     with col4:
-      draw_result(X, y, history, threshold)
+      draw_result(X, y, history, history_batch, threshold)
     with col5:
+      w = history['weights'][-1]
+      X_ = np.concatenate((X, np.ones((X.shape[0], 1))), axis=1)
+      y_pred = feed_forward(X_, w)
       y_pred_label = [0 if i < threshold else 1 for i in y_pred]
       cm = confusion_matrix(y, y_pred_label)
       fig = plt.figure()
@@ -120,7 +122,7 @@ def main():
   with col2:
     eta = st.number_input('Learning Rate', max_value=.1, value=.01)
   with col3:
-    epochs = st.number_input('Epochs', value=300, step=10, min_value=10)
+    epochs = st.number_input('Epochs', value=300, step=50, min_value=10)
   with col4:
     batch_train = st.toggle('Mini-Batch GD')
     batch_size = st.number_input('Batch Size', min_value=1, max_value=100, value=20, step=5)
@@ -128,8 +130,14 @@ def main():
   threshold = st.slider('Threshold', min_value=.01, max_value=.99, value=.5, step=.01)
 
   X,y = create_dataset(n_samples)
-  history, y_pred = train(X, y, eta, epochs, batch_size)
-  show_result(X, y, y_pred, history, threshold)
+  history, t = train(X, y, eta, epochs)
+  st.write('Training time:', t, 'ms. Accuracy:', history['accuracy'][-1]*100, 'Loss:', history['loss'][-1])
+  history_batch = None
+  if batch_train:
+    history_batch, t_batch = train(X, y, eta, epochs, batch_size)
+    st.write('Mini-batch training time:', t_batch, 'ms')
+
+  show_result(X, y, history, history_batch, threshold)
 
 if __name__ == "__main__":
   main()
