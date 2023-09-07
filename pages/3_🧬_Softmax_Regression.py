@@ -119,7 +119,6 @@ def main():
   col1, col2, col3, col4 = st.columns(4)
   with col1:
     n_samples = st.number_input('Number of Samples', value=100, min_value=50, max_value=1000, step=50)
-    X = create_dataset(n_samples)
     n_clusters = st.number_input('Number of Clusters', value=3, min_value=2, max_value=10)
 
   with col2:
@@ -131,6 +130,7 @@ def main():
     batch_size = st.number_input('Batch Size', min_value=1, max_value=100, value=20, step=5)
     if not batch_train:batch_size = 0
 
+  X = create_dataset(n_samples)
   centers, y = kmeans(X, n_clusters)
   history = train(X, y, eta, epochs, batch_size)
   draw_result(X, y, centers, history)
