@@ -83,10 +83,10 @@ def draw_result(X, y, history, history_batch, threshold):
   plt.subplot(2,1,2)
   plt.title('History')
   plt.xlabel('Epochs')
-  plt.plot(history['loss'], label='Loss')
-  plt.plot(history['accuracy'], label='Accuracy')
   if history_batch:
     plt.plot(history_batch['loss'], label='Mini-batch Loss')
+  plt.plot(history['loss'], label='Loss')
+  plt.plot(history['accuracy'], label='Accuracy')
 
   plt.legend()
   st.pyplot(fig)
