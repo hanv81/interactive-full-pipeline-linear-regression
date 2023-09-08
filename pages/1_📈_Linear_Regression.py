@@ -21,6 +21,7 @@ def prepare_data():
   x,y = generate_data(n_samples, n_features)
   return x,y
 
+@st.cache_data
 def visualize_loss_surface(x, y, w_optimal, history):
   w_ = np.array(history['weights'])
   loss_ = np.array(history['loss'])
@@ -148,8 +149,7 @@ def train(x, y, eta, epochs, batch_train, batch_size, draw_loss, show_training_r
     if x.shape[1] == 1:
       draw_result(x, y, history, history_batch, w_optimal)
       if draw_loss:
-        if batch_train:visualize_loss_surface(x, y, w_optimal.flatten(), history_batch)
-        else:visualize_loss_surface(x, y, w_optimal.flatten(), history)
+        visualize_loss_surface(x, y, w_optimal.flatten(), history_batch if batch_train else history)
     elif x.shape[1] == 2:
       draw_result_3d(x, y, history, history_batch)
     else:
