@@ -28,7 +28,7 @@ def feed_forward(X, w):
   return 1/(1 + np.exp(-(X*w).sum(axis=1)))
 
 def gradient(X, y, y_pred):
-  return (y_pred-y).T @ X
+  return (X*(y_pred-y).reshape(-1,1)).sum(axis=0)
 
 def back_propagation(w, dw, eta):
   return w-eta*dw
