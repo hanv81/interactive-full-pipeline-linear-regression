@@ -138,10 +138,10 @@ def train(x, y, eta, epochs, batch_train, batch_size, draw_loss, show_training_r
     w_gd_batch = np.round(history_batch['weights'][np.argmin(history_batch['loss'])], 4)
 
   x_ = np.concatenate((x, np.ones((x.shape[0], 1))), axis=1)
-  w_optimal = np.linalg.pinv(x_.T @ x_) @ x_.T @ y
+  w_optimal = (np.linalg.pinv(x_.T @ x_) @ x_.T @ y).flatten()
   w_gd = np.round(history['weights'][np.argmin(history['loss'])], 4)
   if show_training_result:
-    st.write('Optimal weights:', *w_optimal.flatten().round(decimals=4))
+    st.write('Optimal weights:', *w_optimal.round(decimals=4))
     st.write('Batch GD Weights:', *w_gd, 'Training Time:', t, 'ms')
     if batch_train:st.write('Mini-batch GD Weights:', *w_gd_batch, 'Training Time:', t_batch, 'ms')
 
@@ -149,7 +149,7 @@ def train(x, y, eta, epochs, batch_train, batch_size, draw_loss, show_training_r
     if x.shape[1] == 1:
       draw_result(x, y, history, history_batch, w_optimal)
       if draw_loss:
-        visualize_loss_surface(x, y, w_optimal.flatten(), history_batch if batch_train else history)
+        visualize_loss_surface(x, y, w_optimal, history_batch if history_batch else history)
     elif x.shape[1] == 2:
       draw_result_3d(x, y, history, history_batch)
     else:
