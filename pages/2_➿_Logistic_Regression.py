@@ -5,6 +5,7 @@ import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 import seaborn as sns
 from stqdm import stqdm
+from plotly.subplots import make_subplots
 from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
 
@@ -61,35 +62,30 @@ def fit(X, y, ETA, EPOCHS, batch_size=0):
   return history
 
 def draw_result(X, y, history, history_batch, threshold):
-  fig, _ = plt.subplots(1,2)
-  fig.set_figheight(3)
-
-  plt.subplot(1,2,1)
-  plt.title('Decision Boundary')
-  plt.xlabel('x1')
-  plt.ylabel('x2')
-  plt.scatter(X[y==0, 0], X[y==0, 1], label='Class 0')
-  plt.scatter(X[y==1, 0], X[y==1, 1], label='Class 1')
-
+  fig = make_subplots(rows=1, cols=2, subplot_titles=('Decision Boundary', 'History'))
+  fig.add_trace(go.Scatter(x=X[y==0,0], y=X[y==0,1], mode='markers', name='Class 0'), row=1, col=1)
+  fig.add_trace(go.Scatter(x=X[y==1,0], y=X[y==1,1], mode='markers', name='Class 1',
+                           line = dict(color='orange')), row=1, col=1)
   x1 = np.array([X[:, 0].min()-.05, X[:, 0].max()+.05])
   w = history['weights'][-1]
   x2 = -(x1*w[0] + w[2])/w[1]
-  plt.plot(x1, x2, c='y')
+  fig.add_trace(go.Scatter(x=x1, y=x2, mode='lines', name = 'Decision Boundary',
+                           line = dict(color='yellowgreen')), row=1, col=1)
   if threshold != .5:
     x2_t = -(x1*w[0] + w[2] + np.log(1/threshold-1))/w[1]
-    plt.plot(x1, x2_t, linestyle = '--', c='r', label=f't={threshold}')
-  plt.legend()
+    fig.add_trace(go.Scatter(x=x1, y=x2_t, mode='lines', name = f'Threshold {threshold}',
+                           line = dict(color='red', dash='dash')), row=1, col=1)
 
-  plt.subplot(1,2,2)
-  plt.title('History')
-  plt.xlabel('Epochs')
   if history_batch:
-    plt.plot(history_batch['loss'], label='Mini-batch Loss')
-  plt.plot(history['loss'], label='Loss')
-  plt.plot(history['accuracy'], label='Accuracy')
+    fig.add_trace(go.Scatter(y=history_batch['loss'], name='Mini-batch Loss'), row=1, col=2)
+  fig.add_trace(go.Scatter(y=history['loss'], mode='lines', name='Batch Loss', line = dict(color='magenta')), row=1, col=2)
+  fig.add_trace(go.Scatter(y=history['accuracy'], mode='lines', name='Accuracy'), row=1, col=2)
 
-  plt.legend()
-  st.pyplot(fig)
+  fig.update_xaxes(title_text="x1", row=1, col=1)
+  fig.update_yaxes(title_text="x2", row=1, col=1)
+  fig.update_xaxes(title_text="Epochs", row=1, col=2)
+
+  st.plotly_chart(fig)
 
 def train(X, y, eta, epochs, batch_size=0):
   t = time.time()
