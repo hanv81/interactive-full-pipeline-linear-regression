@@ -61,10 +61,10 @@ def fit(X, y, ETA, EPOCHS, batch_size=0):
   return history
 
 def draw_result(X, y, history, history_batch, threshold):
-  fig, _ = plt.subplots(2,1)
-  fig.set_figheight(12)
+  fig, _ = plt.subplots(1,2)
+  fig.set_figheight(3)
 
-  plt.subplot(2,1,1)
+  plt.subplot(1,2,1)
   plt.title('Decision Boundary')
   plt.xlabel('x1')
   plt.ylabel('x2')
@@ -80,7 +80,7 @@ def draw_result(X, y, history, history_batch, threshold):
     plt.plot(x1, x2_t, linestyle = '--', c='r', label=f't={threshold}')
   plt.legend()
 
-  plt.subplot(2,1,2)
+  plt.subplot(1,2,2)
   plt.title('History')
   plt.xlabel('Epochs')
   if history_batch:
@@ -99,10 +99,9 @@ def train(X, y, eta, epochs, batch_size=0):
 
 def show_result(X, y, history, history_batch, threshold):
   with st.spinner('Visualizing...'):
+    draw_result(X, y, history, history_batch, threshold)
     col4, col5 = st.columns(2)
     with col4:
-      draw_result(X, y, history, history_batch, threshold)
-    with col5:
       w = history['weights'][-1]
       X_ = np.concatenate((X, np.ones((X.shape[0], 1))), axis=1)
       y_pred = feed_forward(X_, w)
@@ -111,6 +110,7 @@ def show_result(X, y, history, history_batch, threshold):
       fig = plt.figure()
       sns.heatmap(cm, annot=True, cmap='Blues', fmt='d')
       st.pyplot(fig)
+    with col5:
       st.subheader('Classification Report')
       st.text(classification_report(y, y_pred_label))
 
