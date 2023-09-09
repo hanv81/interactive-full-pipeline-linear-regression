@@ -130,7 +130,7 @@ def draw_loss_history(history, history_batch):
   fig.update_layout(xaxis_title="Epochs", yaxis_title="Loss")
   st.plotly_chart(fig)
 
-def train(x, y, eta, epochs, batch_train, batch_size, draw_loss, show_training_result):
+def train(x, y, eta, epochs, batch_train, batch_size, show_training_info):
   history, t = fit(x, y, eta, epochs)
   history_batch = None
   if batch_train:
@@ -140,11 +140,15 @@ def train(x, y, eta, epochs, batch_train, batch_size, draw_loss, show_training_r
   x_ = np.concatenate((x, np.ones((x.shape[0], 1))), axis=1)
   w_optimal = (np.linalg.pinv(x_.T @ x_) @ x_.T @ y).flatten()
   w_gd = np.round(history['weights'][np.argmin(history['loss'])], 4)
-  if show_training_result:
+
+  if show_training_info:
     st.write('Optimal weights:', *w_optimal.round(decimals=4))
     st.write('Batch GD Weights:', *w_gd, 'Training Time:', t, 'ms')
     if batch_train:st.write('Mini-batch GD Weights:', *w_gd_batch, 'Training Time:', t_batch, 'ms')
+  
+  return history, history_batch, w_optimal
 
+def visualize_result(x, y, history, history_batch, w_optimal, draw_loss):
   with st.spinner('Visualizing...'):
     if x.shape[1] == 1:
       visualize_regression_line(x, y, history, history_batch, w_optimal)
@@ -170,7 +174,8 @@ def main():
     show_training_info = st.toggle('Show Training Info')
     draw_loss = st.toggle('Draw Loss Surface')
 
-  train(x, y, eta, epochs, batch_train, batch_size, draw_loss, show_training_info)
+  history, history_batch, w_optimal = train(x, y, eta, epochs, batch_train, batch_size, show_training_info)
+  visualize_result(x, y, history, history_batch, w_optimal, draw_loss)
 
 if __name__ == "__main__":
   main()
