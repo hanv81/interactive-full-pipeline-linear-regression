@@ -15,12 +15,6 @@ def generate_data(n_samples, n_features):
   y = (x_*w).sum(axis=1) + noise
   return x, y.reshape(-1,1)
 
-def prepare_data():
-  n_samples = st.number_input('Number of Samples', value=1000, min_value=100, max_value=10000, step=500)
-  n_features = st.number_input('Number of Features', value=1, min_value=1, max_value=5, step=1)
-  x,y = generate_data(n_samples, n_features)
-  return x,y
-
 @st.cache_data
 def visualize_loss_surface(x, y, w_optimal, history):
   w_ = np.array(history['weights'])
@@ -163,7 +157,9 @@ def main():
   st.header('Linear Regression')
   col1, col2, col3, col4 = st.columns(4)
   with col1:
-    x,y = prepare_data()
+    n_samples = st.number_input('Number of Samples', value=1000, min_value=100, max_value=10000, step=500)
+    n_features = st.number_input('Number of Features', value=1, min_value=1, max_value=5, step=1)
+    x,y = generate_data(n_samples, n_features)
   with col2:
     eta = st.number_input('Learning Rate', value=.01, step=.01, max_value=.1, min_value=.0001)
     epochs = st.number_input('Epochs', value=100, step=50, min_value=10)
@@ -172,7 +168,7 @@ def main():
     batch_size = st.number_input('Batch Size', min_value=1, max_value=100, value=10, step=5)
   with col4:
     show_training_info = st.toggle('Show Training Info')
-    draw_loss = st.toggle('Draw Loss Surface')
+    draw_loss = st.toggle('Draw Loss Surface') if n_features == 1 else False
 
   history, history_batch, w_optimal = train(x, y, eta, epochs, batch_train, batch_size, show_training_info)
   visualize_result(x, y, history, history_batch, w_optimal, draw_loss)
