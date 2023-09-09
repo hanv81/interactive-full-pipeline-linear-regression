@@ -72,7 +72,7 @@ def fit(x, y, eta, epochs, batch_size=0):
   t = int((time.time() - t)*1000)
   return history, t
 
-def draw_result(x, y, history, history_batch, w_optimal):
+def visualize_regression_line(x, y, history, history_batch, w_optimal):
   w, b = history['weights'][np.argmin(history['loss'])]
   x_line = np.array([x.min()-.5, x.max()+.5])
   y_gd = x_line * w + b
@@ -99,7 +99,7 @@ def draw_result(x, y, history, history_batch, w_optimal):
   fig.update_layout(height=500, width=800)
   st.plotly_chart(fig)
 
-def draw_result_3d(x, y, history, history_batch):
+def visualize_regression_plane(x, y, history, history_batch):
   w_batch = history['weights'][np.argmin(history['loss'])]
   x_plane = [x[:,0].min(), x[:,0].max()]
   y_plane = [x[:,1].min(), x[:,1].max()]
@@ -147,11 +147,11 @@ def train(x, y, eta, epochs, batch_train, batch_size, draw_loss, show_training_r
 
   with st.spinner('Visualizing...'):
     if x.shape[1] == 1:
-      draw_result(x, y, history, history_batch, w_optimal)
+      visualize_regression_line(x, y, history, history_batch, w_optimal)
       if draw_loss:
         visualize_loss_surface(x, y, w_optimal, history_batch if history_batch else history)
     elif x.shape[1] == 2:
-      draw_result_3d(x, y, history, history_batch)
+      visualize_regression_plane(x, y, history, history_batch)
     else:
       draw_loss_history(history, history_batch)
 
