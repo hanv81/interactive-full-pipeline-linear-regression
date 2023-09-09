@@ -127,11 +127,16 @@ def main():
 
   X,y = create_dataset(n_samples)
   history, t = train(X, y, eta, epochs)
-  st.write('Training time:', t, 'ms. Accuracy:', history['accuracy'][-1]*100, 'Loss:', history['loss'][-1])
+  st.write('Training time:', t, 'ms. Accuracy:', round(history['accuracy'][-1]*100,2), 'Loss:', round(history['loss'][-1],4))
   history_batch = None
   if batch_train:
     history_batch, t_batch = train(X, y, eta, epochs, batch_size)
-    st.write('Mini-batch training time:', t_batch, 'ms')
+    w = history_batch['weights'][-1]
+    X_ = np.concatenate((X, np.ones((X.shape[0], 1))), axis=1)
+    y_pred = feed_forward(X_, w)
+    loss = round(bce_loss(y, y_pred),4)
+    acc = round(accuracy(y, y_pred)*100,2)
+    st.write('Mini-batch training time:', t_batch, 'ms. Accuracy:', acc, 'Loss:', loss)
 
   show_result(X, y, history, history_batch, threshold)
 
