@@ -18,17 +18,21 @@ def generate_data(n_samples, n_features):
 @st.cache_data
 def visualize_loss_surface(x, y, w_optimal, history):
   w_ = np.array(history['weights'])
-  loss_ = np.array(history['loss'])
-  w0,b0 = w_optimal
-  w = np.linspace(w0-3, w0+3, 200)
-  b = np.linspace(b0-3, b0+3, 200)
-  ww, bb = np.meshgrid(w, b)
-  wb = np.c_[ww.ravel(), bb.ravel()]
-  loss = np.mean(((wb[:,0]*x + wb[:,1])-y)**2, axis=0)
+  if x.shape[1] == 1:
+    loss_ = np.array(history['loss'])
+    w0,b0 = w_optimal
+    w = np.linspace(w0-3, w0+3, 200)
+    b = np.linspace(b0-3, b0+3, 200)
+    ww, bb = np.meshgrid(w, b)
+    wb = np.c_[ww.ravel(), bb.ravel()]
+    loss = np.mean(((wb[:,0]*x + wb[:,1])-y)**2, axis=0)
 
-  fig = go.Figure(data=[go.Surface(x=w, y=b, z=loss.reshape(ww.shape)),
-                        go.Scatter3d(x=w_[:,0], y=w_[:,1], z=loss_, mode='markers'),
-                        go.Scatter3d(x=w_[[0,-1],0], y=w_[[0,-1],1], z=loss_[[0,-1]], mode='markers')])
+    fig = go.Figure(data=[go.Surface(x=w, y=b, z=loss.reshape(ww.shape)),
+                          go.Scatter3d(x=w_[:,0], y=w_[:,1], z=loss_, mode='markers'),
+                          go.Scatter3d(x=w_[[0,-1],0], y=w_[[0,-1],1], z=loss_[[0,-1]], mode='markers')])
+  elif x.shape[1] == 2:
+    fig = px.scatter_3d(x=w_[:,0], y=w_[:,1], z=w_[:,2], 
+                        color=[0 if 0 < i < len(w_)-1 else 1 for i in range(len(w_))])
   st.plotly_chart(fig)
 
 def mse(y, y_pred):
@@ -142,23 +146,23 @@ def train(x, y, eta, epochs, batch_train, batch_size, show_training_info):
   
   return history, history_batch, w_optimal
 
-def visualize_result(x, y, history, history_batch, w_optimal, draw_loss):
+def visualize_result(x, y, history, history_batch, w_optimal, draw_loss_surface):
   with st.spinner('Visualizing...'):
     if x.shape[1] == 1:
       visualize_regression_line(x, y, history, history_batch, w_optimal)
-      if draw_loss:
-        visualize_loss_surface(x, y, w_optimal, history_batch if history_batch else history)
     elif x.shape[1] == 2:
       visualize_regression_plane(x, y, history, history_batch)
     else:
       draw_loss_history(history, history_batch)
+    if draw_loss_surface:
+      visualize_loss_surface(x, y, w_optimal, history_batch if history_batch else history)
 
 def main():
   st.header('Linear Regression')
   col1, col2, col3, col4 = st.columns(4)
   with col1:
     n_samples = st.number_input('Number of Samples', value=1000, min_value=100, max_value=10000, step=500)
-    n_features = st.number_input('Number of Features', value=1, min_value=1, max_value=5, step=1)
+    n_features = st.number_input('Number of Features', value=1, min_value=1, max_value=10, step=1)
     x,y = generate_data(n_samples, n_features)
   with col2:
     eta = st.number_input('Learning Rate', value=.01, step=.01, max_value=.1, min_value=.0001)
@@ -168,10 +172,10 @@ def main():
     batch_size = st.number_input('Batch Size', min_value=1, max_value=100, value=10, step=5)
   with col4:
     show_training_info = st.toggle('Show Training Info')
-    draw_loss = st.toggle('Draw Loss Surface') if n_features == 1 else False
+    draw_loss_surface = st.toggle('Draw Loss Surface') if n_features < 3 else False
 
   history, history_batch, w_optimal = train(x, y, eta, epochs, batch_train, batch_size, show_training_info)
-  visualize_result(x, y, history, history_batch, w_optimal, draw_loss)
+  visualize_result(x, y, history, history_batch, w_optimal, draw_loss_surface)
 
 if __name__ == "__main__":
   main()
