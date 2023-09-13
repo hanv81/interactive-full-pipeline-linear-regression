@@ -136,7 +136,7 @@ def visualize_loss_surface(x, y, w_optimal, history):
                         color=[0 if 0 < i < len(w_)-1 else 1 for i in range(len(w_))])
   st.plotly_chart(fig)
 
-def train(x, y, eta, epochs, batch_train, batch_size, show_training_info):
+def train(x, y, eta, epochs, batch_train, batch_size):
   history, t = fit(x, y, eta, epochs)
   history_batch = None
   if batch_train:
@@ -147,7 +147,7 @@ def train(x, y, eta, epochs, batch_train, batch_size, show_training_info):
   w_optimal = (np.linalg.pinv(x_.T @ x_) @ x_.T @ y).flatten()
   w_gd = np.round(history['weights'][np.argmin(history['loss'])], 4)
 
-  if show_training_info:
+  with st.expander('Training Info'):
     st.write('Optimal weights:', *w_optimal.round(decimals=4))
     st.write('Batch GD Weights:', *w_gd, 'Training Time:', t, 'ms')
     if batch_train:st.write('Mini-batch GD Weights:', *w_gd_batch, 'Training Time:', t_batch, 'ms')
@@ -167,7 +167,7 @@ def visualize_result(x, y, history, history_batch, w_optimal, draw_loss_surface)
 
 def main():
   st.header('Linear Regression')
-  col1, col2, col3, col4 = st.columns(4)
+  col1, col2, col3 = st.columns(3)
   with col1:
     n_samples = st.number_input('Number of Samples', value=1000, min_value=100, max_value=10000, step=500)
     n_features = st.number_input('Number of Features', value=1, min_value=1, max_value=10, step=1)
@@ -176,13 +176,11 @@ def main():
     eta = st.number_input('Learning Rate', value=.01, step=.01, max_value=.1, min_value=.0001)
     epochs = st.number_input('Epochs', value=100, step=50, min_value=10)
   with col3:
+    draw_loss_surface = st.toggle('Draw Loss Surface') if n_features < 3 else False
     batch_train = st.toggle('Mini-Batch GD')
     batch_size = st.number_input('Batch Size', min_value=1, max_value=100, value=10, step=5)
-  with col4:
-    show_training_info = st.toggle('Show Training Info')
-    draw_loss_surface = st.toggle('Draw Loss Surface') if n_features < 3 else False
 
-  history, history_batch, w_optimal = train(x, y, eta, epochs, batch_train, batch_size, show_training_info)
+  history, history_batch, w_optimal = train(x, y, eta, epochs, batch_train, batch_size)
   visualize_result(x, y, history, history_batch, w_optimal, draw_loss_surface)
 
 if __name__ == "__main__":
