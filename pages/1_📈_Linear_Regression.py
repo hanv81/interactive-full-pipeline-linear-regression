@@ -15,26 +15,6 @@ def generate_data(n_samples, n_features):
   y = (x_*w).sum(axis=1) + noise
   return x, y.reshape(-1,1)
 
-@st.cache_data
-def visualize_loss_surface(x, y, w_optimal, history):
-  w_ = np.array(history['weights'])
-  if x.shape[1] == 1:
-    loss_ = np.array(history['loss'])
-    w0,b0 = w_optimal
-    w = np.linspace(w0-3, w0+3, 200)
-    b = np.linspace(b0-3, b0+3, 200)
-    ww, bb = np.meshgrid(w, b)
-    wb = np.c_[ww.ravel(), bb.ravel()]
-    loss = np.mean(((wb[:,0]*x + wb[:,1])-y)**2, axis=0)
-
-    fig = go.Figure(data=[go.Surface(x=w, y=b, z=loss.reshape(ww.shape)),
-                          go.Scatter3d(x=w_[:,0], y=w_[:,1], z=loss_, mode='markers'),
-                          go.Scatter3d(x=w_[[0,-1],0], y=w_[[0,-1],1], z=loss_[[0,-1]], mode='markers')])
-  elif x.shape[1] == 2:
-    fig = px.scatter_3d(x=w_[:,0], y=w_[:,1], z=w_[:,2], 
-                        color=[0 if 0 < i < len(w_)-1 else 1 for i in range(len(w_))])
-  st.plotly_chart(fig)
-
 def mse(y, y_pred):
   return ((y-y_pred)**2).mean()
 
@@ -126,6 +106,34 @@ def draw_loss_history(history, history_batch):
   data.append(go.Scatter(y = history['loss'], mode = 'lines', name='Batch', line = dict(color='magenta')))
   fig = go.Figure(data)
   fig.update_layout(xaxis_title="Epochs", yaxis_title="Loss")
+  st.plotly_chart(fig)
+
+@st.cache_data
+def visualize_loss_surface(x, y, w_optimal, history):
+  w_ = np.array(history['weights'])
+  if x.shape[1] == 1:
+    fig = make_subplots(rows=1, cols=2, subplot_titles=('Learning Curve', 'Loss Surface'),
+                        specs=[[{'type':'xy'}, {'type':'surface'}]])
+    fig.add_trace(go.Scatter(x=w_[:,0], y=w_[:,1], mode='markers', name='Learning'), row=1, col=1)
+    fig.add_trace(go.Scatter(x=w_[[0],0], y=w_[[0],1], mode='markers', name='Start'), row=1, col=1)
+    fig.add_trace(go.Scatter(x=w_[[-1],0], y=w_[[-1],1], mode='markers', name='End'), row=1, col=1)
+    fig.update_xaxes(title_text="w", row=1, col=1)
+    fig.update_yaxes(title_text="b", row=1, col=1)
+
+    loss_ = np.array(history['loss'])
+    w0,b0 = w_optimal
+    w = np.linspace(w0-3, w0+3, 200)
+    b = np.linspace(b0-3, b0+3, 200)
+    ww, bb = np.meshgrid(w, b)
+    wb = np.c_[ww.ravel(), bb.ravel()]
+    loss = np.mean(((wb[:,0]*x + wb[:,1])-y)**2, axis=0)
+    fig.add_trace(go.Surface(x=w, y=b, z=loss.reshape(ww.shape)), row=1, col=2)
+    fig.add_trace(go.Scatter3d(x=w_[:,0], y=w_[:,1], z=loss_, mode='markers'), row=1, col=2)
+    fig.add_trace(go.Scatter3d(x=w_[[0,-1],0], y=w_[[0,-1],1], z=loss_[[0,-1]], mode='markers'), row=1, col=2)
+
+  elif x.shape[1] == 2:
+    fig = px.scatter_3d(x=w_[:,0], y=w_[:,1], z=w_[:,2], 
+                        color=[0 if 0 < i < len(w_)-1 else 1 for i in range(len(w_))])
   st.plotly_chart(fig)
 
 def train(x, y, eta, epochs, batch_train, batch_size, show_training_info):
