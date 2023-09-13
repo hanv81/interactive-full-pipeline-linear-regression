@@ -51,8 +51,7 @@ def kmeans(X, n_clusters):
 
     if np.array_equal(centers, centers_new):
       t = (time.time() - t)*1000
-      st.write('Clustering time:', int(t))
-      return centers, y
+      return centers, y, t
     centers = centers_new
 
 @st.cache_data
@@ -91,8 +90,7 @@ def train(X, y, ETA, EPOCHS, batch_size=0):
   loss = ce_loss(y_ohe, y_pred)
   acc = accuracy(y, y_pred.argmax(axis=1))
   t = (time.time() - t)*1000
-  st.write('Training time:', int(t), 'Loss:', round(loss,4), 'Accuracy:', round(acc*100,2))
-  return history
+  return history, loss, acc, t
 
 def draw_result(X, y, centers, history):
   fig, _ = plt.subplots(1,3)
@@ -131,8 +129,11 @@ def main():
     if not batch_train:batch_size = 0
 
   X = create_dataset(n_samples)
-  centers, y = kmeans(X, n_clusters)
-  history = train(X, y, eta, epochs, batch_size)
+  centers, y, t = kmeans(X, n_clusters)
+  history, loss, acc, t_train = train(X, y, eta, epochs, batch_size)
+  with st.expander('Training Info'):
+    st.write('Clustering time:', int(t))
+    st.write('Training time:', int(t), 'Loss:', round(loss,4), 'Accuracy:', round(acc*100,2))
   draw_result(X, y, centers, history)
 
 if __name__ == "__main__":
