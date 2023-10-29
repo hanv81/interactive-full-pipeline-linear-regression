@@ -122,14 +122,15 @@ def visualize_loss_surface(x, y, w_optimal, history):
 
     loss_ = np.array(history['loss'])
     w0,b0 = w_optimal
-    w = np.linspace(w0-3, w0+3, 200)
-    b = np.linspace(b0-3, b0+3, 200)
+    w = np.linspace(min(w0-3, w_[:,0].min()), max(w0+3, w_[:,0].max()), 200)
+    b = np.linspace(min(b0-3, w_[:,1].min()), max(b0+3, w_[:,1].max()), 200)
     ww, bb = np.meshgrid(w, b)
     wb = np.c_[ww.ravel(), bb.ravel()]
     loss = np.mean(((wb[:,0]*x + wb[:,1])-y)**2, axis=0)
     fig.add_trace(go.Surface(x=w, y=b, z=loss.reshape(ww.shape)), row=1, col=2)
     fig.add_trace(go.Scatter3d(x=w_[:,0], y=w_[:,1], z=loss_, mode='markers'), row=1, col=2)
     fig.add_trace(go.Scatter3d(x=w_[[0,-1],0], y=w_[[0,-1],1], z=loss_[[0,-1]], mode='markers'), row=1, col=2)
+    fig.add_trace(go.Scatter3d(x=w_[:,0], y=w_[:,1], z=np.zeros(w_.shape[0]), mode='markers'), row=1, col=2)
 
   elif x.shape[1] == 2:
     fig = px.scatter_3d(x=w_[:,0], y=w_[:,1], z=w_[:,2], 
