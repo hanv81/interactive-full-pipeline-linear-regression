@@ -27,8 +27,10 @@ def accuracy(y, y_pred):
 def feed_forward(X, w):
   return 1/(1 + np.exp(-(X*w).sum(axis=1)))
 
-def gradient(X, y, y_pred):
-  return (X*(y_pred-y).reshape(-1,1)).mean(axis=0)
+def gradient(X, y, y_pred, loss_fn):
+  if loss_fn == 'BCE':
+    return (X*(y_pred-y).reshape(-1,1)).mean(axis=0)
+  return (X*(((y_pred-y)*y_pred*(1-y_pred)).reshape(-1,1))).mean(axis=0)
 
 def back_propagation(w, dw, lr):
   return w-lr*dw
@@ -84,14 +86,14 @@ def train(X, y, lr, epochs, loss_fn, start_point):
   w = generate_weights(X.shape[1]+1, start_point)
   X_ = np.concatenate((X, np.ones((X.shape[0], 1))), axis=1)
   history = {'loss':[], 'accuracy':[], 'weights':[]}
-  for i in range(epochs):
+  for _ in range(epochs):
     y_pred = feed_forward(X_, w)
     loss = bce(y, y_pred) if loss_fn == 'BCE' else mse(y, y_pred)
     acc = accuracy(y, y_pred)
     history['weights'].append(w)
     history['loss'].append(loss)
     history['accuracy'].append(acc)
-    dw = gradient(X_, y, y_pred)
+    dw = gradient(X_, y, y_pred, loss_fn)
     w = back_propagation(w, dw, lr)
 
   w = history['weights'][np.argmin(history['loss'])]
@@ -127,7 +129,6 @@ def main():
 
   with st.expander('Training Info', True):
     cols = st.columns(4)
-    epochs, epsilon = 1000, .001
     with cols[0]:
       lr = st.selectbox('Learning Rate', (.1, .05, .01, .005, .001, .0005, .0001), 1)
     with cols[1]:
