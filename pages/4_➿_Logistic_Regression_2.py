@@ -140,11 +140,11 @@ def main():
   with st.expander('Visualize Range'):
     col1, col2, col3 = st.columns(3)
     with col1:
-      w1 = st.number_input('w1', -50)
-      w2 = st.number_input('w2', 50)
+      w1 = st.number_input('w1', value=-50)
+      w2 = st.number_input('w2', value=50)
     with col2:
-      b1 = st.number_input('b1', -50)
-      b2 = st.number_input('b2', 50)
+      b1 = st.number_input('b1', value=-50)
+      b2 = st.number_input('b2', value=50)
     with col3:num = st.number_input('Points to linspace', value= 100, min_value=50, max_value=500, step=50)
 
   if st.button('Train', use_container_width=True):
