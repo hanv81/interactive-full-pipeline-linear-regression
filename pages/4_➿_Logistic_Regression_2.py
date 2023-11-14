@@ -114,11 +114,37 @@ def create_dataset():
       y = np.array(y.split(), dtype=int)
       if X.shape[0] != y.shape[0]:
         st.error('len(X) != len(y)')
-      
-      fig = go.Figure(data=[go.Scatter(x=X.flatten()[y==0], y=y[y==0], marker_color='rgba(255, 0, 0, .8)', mode='markers', name='Class 0'),
-                            go.Scatter(x=X.flatten()[y==1], y=y[y==1], marker_color='rgba(0, 0, 255, .8)', mode='markers', name='Class 1')],
-                      layout=go.Layout({"showlegend": False}))
-      st.plotly_chart(fig)
+      else:
+        cols = st.columns(5)
+        with cols[0]:draw_bce = st.toggle('Draw BCE')
+        with cols[1]:draw_mse = st.toggle('Draw MSE')
+        if draw_bce + draw_mse == 0:
+          fig = go.Figure(data=[go.Scatter(x=X.flatten()[y==0], y=y[y==0], marker_color='rgba(255, 0, 0, .8)', mode='markers', name='Class 0'),
+                                go.Scatter(x=X.flatten()[y==1], y=y[y==1], marker_color='rgba(0, 0, 255, .8)', mode='markers', name='Class 1')],
+                          layout=go.Layout({"showlegend": False}))
+        else:
+          col1, col2, col3 = st.columns(3)
+          with col1:
+            w1 = st.number_input('w1', value=-50)
+            w2 = st.number_input('w2', value=50)
+          with col2:
+            b1 = st.number_input('b1', value=-50)
+            b2 = st.number_input('b2', value=50)
+          with col3:num = st.number_input('Points to linspace', value= 100, min_value=50, max_value=500, step=50)
+          w = np.linspace(w1, w2, num)
+          b = np.linspace(b1, b2, num)
+          ww, bb = np.meshgrid(w, b)
+          wb = np.c_[ww.ravel(), bb.ravel()]
+          w_, b_ = wb[:,0], wb[:,1]
+          y_pred = (1/(1 + np.exp(-(w_*X + b_)))).T
+          data = []
+          if draw_bce:
+            data.append(go.Surface(x=w, y=b, z=bce_loss(y, y_pred).reshape(ww.shape), name='BCE'))
+          if draw_mse:
+            data.append(go.Surface(x=w, y=b, z=mse_loss(y, y_pred).reshape(ww.shape), name='MSE'))
+          fig = go.Figure(data=data)
+          fig.update_layout(scene=dict(xaxis_title='w', yaxis_title='b', zaxis_title='L'))
+        st.plotly_chart(fig)
     except:
       traceback.print_exc()
       st.error('Error data input')
@@ -141,12 +167,12 @@ def main():
   with st.expander('Visualize Range'):
     col1, col2, col3 = st.columns(3)
     with col1:
-      w1 = st.number_input('w1', value=-50)
-      w2 = st.number_input('w2', value=50)
+      w1 = st.number_input('w1', value=-50, key='w1')
+      w2 = st.number_input('w2', value=50, key='w2')
     with col2:
-      b1 = st.number_input('b1', value=-50)
-      b2 = st.number_input('b2', value=50)
-    with col3:num = st.number_input('Points to linspace', value= 100, min_value=50, max_value=500, step=50)
+      b1 = st.number_input('b1', value=-50, key='b1')
+      b2 = st.number_input('b2', value=50, key='b2')
+    with col3:num = st.number_input('Points to linspace', value= 100, min_value=50, max_value=500, step=50, key='num')
 
   if st.button('Train', use_container_width=True):
     history = train(X, y, lr, epochs, loss_fn, start_point)
