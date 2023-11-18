@@ -62,7 +62,8 @@ def fit(X, y, ETA, EPOCHS, batch_size=0):
   return history
 
 def draw_result(X, y, history, history_batch, threshold):
-  fig = make_subplots(rows=1, cols=2, subplot_titles=('Decision Boundary', 'History'))
+  fig = make_subplots(rows=1, cols=3, subplot_titles=('Decision Boundary', 'History', 'Learning Route'),
+                      specs=[[{'type':'xy'}, {'type':'xy'}, {'type':'surface'}]])
   fig.add_trace(go.Scatter(x=X[:,0], y=X[:,1], mode='markers', marker=dict(color=np.where(y==0,'orange','blue')),
                            text=np.where(y==0,'Class 0','Class 1')), row=1, col=1)
   x1 = np.array([X[:, 0].min()-.05, X[:, 0].max()+.05])
@@ -79,6 +80,11 @@ def draw_result(X, y, history, history_batch, threshold):
     fig.add_trace(go.Scatter(y=history_batch['loss'], name='Mini-batch Loss'), row=1, col=2)
   fig.add_trace(go.Scatter(y=history['loss'], mode='lines', name='Batch Loss', line = dict(color='magenta')), row=1, col=2)
   fig.add_trace(go.Scatter(y=history['accuracy'], mode='lines', name='Accuracy'), row=1, col=2)
+
+  w_ = np.array(history_batch['weights']) if history_batch else np.array(history['weights'])
+  loss = np.array(history_batch['loss']) if history_batch else np.array(history['loss'])
+  fig.add_trace(go.Scatter3d(x=w_[:,0], y=w_[:,1], z=w_[:,2], mode='markers', 
+                             text=loss, marker=dict(size=loss*20, color='red')), row=1, col=3)
 
   fig.update_xaxes(title_text="x1", row=1, col=1)
   fig.update_yaxes(title_text="x2", row=1, col=1)
