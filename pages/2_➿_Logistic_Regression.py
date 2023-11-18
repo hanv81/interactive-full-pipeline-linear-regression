@@ -63,9 +63,8 @@ def fit(X, y, ETA, EPOCHS, batch_size=0):
 
 def draw_result(X, y, history, history_batch, threshold):
   fig = make_subplots(rows=1, cols=2, subplot_titles=('Decision Boundary', 'History'))
-  fig.add_trace(go.Scatter(x=X[y==0,0], y=X[y==0,1], mode='markers', name='Class 0'), row=1, col=1)
-  fig.add_trace(go.Scatter(x=X[y==1,0], y=X[y==1,1], mode='markers', name='Class 1',
-                           marker=dict(color='orange')), row=1, col=1)
+  fig.add_trace(go.Scatter(x=X[:,0], y=X[:,1], mode='markers', marker=dict(color=np.where(y==0,'red','blue')),
+                           text=np.where(y==0,'Class 0','Class 1')), row=1, col=1)
   x1 = np.array([X[:, 0].min()-.05, X[:, 0].max()+.05])
   w = history['weights'][-1]
   x2 = -(x1*w[0] + w[2])/w[1]
@@ -84,6 +83,7 @@ def draw_result(X, y, history, history_batch, threshold):
   fig.update_xaxes(title_text="x1", row=1, col=1)
   fig.update_yaxes(title_text="x2", row=1, col=1)
   fig.update_xaxes(title_text="Epochs", row=1, col=2)
+  fig.update_layout(showlegend=False)
 
   st.plotly_chart(fig)
 
