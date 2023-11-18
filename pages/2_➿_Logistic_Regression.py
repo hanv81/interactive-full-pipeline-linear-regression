@@ -63,7 +63,7 @@ def fit(X, y, ETA, EPOCHS, batch_size=0):
 
 def draw_result(X, y, history, history_batch, threshold):
   fig = make_subplots(rows=1, cols=2, subplot_titles=('Decision Boundary', 'History'))
-  fig.add_trace(go.Scatter(x=X[:,0], y=X[:,1], mode='markers', marker=dict(color=np.where(y==0,'red','blue')),
+  fig.add_trace(go.Scatter(x=X[:,0], y=X[:,1], mode='markers', marker=dict(color=np.where(y==0,'orange','blue')),
                            text=np.where(y==0,'Class 0','Class 1')), row=1, col=1)
   x1 = np.array([X[:, 0].min()-.05, X[:, 0].max()+.05])
   w = history['weights'][-1]
