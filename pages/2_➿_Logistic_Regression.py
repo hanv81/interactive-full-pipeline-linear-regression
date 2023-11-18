@@ -65,16 +65,16 @@ def draw_result(X, y, history, history_batch, threshold):
   fig = make_subplots(rows=1, cols=2, subplot_titles=('Decision Boundary', 'History'))
   fig.add_trace(go.Scatter(x=X[y==0,0], y=X[y==0,1], mode='markers', name='Class 0'), row=1, col=1)
   fig.add_trace(go.Scatter(x=X[y==1,0], y=X[y==1,1], mode='markers', name='Class 1',
-                           line = dict(color='orange')), row=1, col=1)
+                           marker=dict(color='orange')), row=1, col=1)
   x1 = np.array([X[:, 0].min()-.05, X[:, 0].max()+.05])
   w = history['weights'][-1]
   x2 = -(x1*w[0] + w[2])/w[1]
   fig.add_trace(go.Scatter(x=x1, y=x2, mode='lines', name = 'Decision Boundary',
-                           line = dict(color='yellowgreen')), row=1, col=1)
+                           marker=dict(color='yellowgreen')), row=1, col=1)
   if threshold != .5:
     x2_t = -(x1*w[0] + w[2] + np.log(1/threshold-1))/w[1]
     fig.add_trace(go.Scatter(x=x1, y=x2_t, mode='lines', name = f'Threshold {threshold}',
-                           line = dict(color='red', dash='dash')), row=1, col=1)
+                             line=dict(color='red', dash='dash')), row=1, col=1)
 
   if history_batch:
     fig.add_trace(go.Scatter(y=history_batch['loss'], name='Mini-batch Loss'), row=1, col=2)
