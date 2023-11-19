@@ -2,7 +2,6 @@ import time
 import streamlit as st
 import numpy as np
 import plotly.graph_objects as go
-import plotly.express as px
 from plotly.subplots import make_subplots
 from stqdm import stqdm
 
@@ -113,24 +112,17 @@ def visualize_loss_surface(x, y, w_optimal, history):
   w_ = np.array(history['weights'])
   loss_ = np.array(history['loss'])
   if x.shape[1] == 1:
-    fig = make_subplots(rows=1, cols=2, subplot_titles=('Learning Curve', 'Loss Surface'),
-                        specs=[[{'type':'xy'}, {'type':'surface'}]])
-    fig.add_trace(go.Scatter(x=w_[:,0], y=w_[:,1], mode='markers', name='Learning'), row=1, col=1)
-    fig.add_trace(go.Scatter(x=w_[[0],0], y=w_[[0],1], mode='markers', name='Start'), row=1, col=1)
-    fig.add_trace(go.Scatter(x=w_[[-1],0], y=w_[[-1],1], mode='markers', name='End'), row=1, col=1)
-    fig.update_xaxes(title_text="w", row=1, col=1)
-    fig.update_yaxes(title_text="b", row=1, col=1)
-
     w0,b0 = w_optimal
     w = np.linspace(min(w0-3, w_[:,0].min()), max(w0+3, w_[:,0].max()), 200)
     b = np.linspace(min(b0-3, w_[:,1].min()), max(b0+3, w_[:,1].max()), 200)
     ww, bb = np.meshgrid(w, b)
     wb = np.c_[ww.ravel(), bb.ravel()]
-    loss = np.mean((wb[:,0]*x + wb[:,1]-y)**2, axis=0)
-    fig.add_trace(go.Surface(x=w, y=b, z=loss.reshape(ww.shape)), row=1, col=2)
-    fig.add_trace(go.Scatter3d(x=w_[:,0], y=w_[:,1], z=loss_, mode='markers'), row=1, col=2)
-    fig.add_trace(go.Scatter3d(x=w_[[0,-1],0], y=w_[[0,-1],1], z=loss_[[0,-1]], mode='markers'), row=1, col=2)
-    fig.add_trace(go.Scatter3d(x=w_[:,0], y=w_[:,1], z=np.zeros(w_.shape[0]), mode='markers'), row=1, col=2)
+    loss_surface = np.mean((wb[:,0]*x + wb[:,1]-y)**2, axis=0)
+    fig = go.Figure(data=[go.Surface(x=w, y=b, z=loss_surface.reshape(ww.shape), name='Loss Surface'),
+                          go.Scatter3d(x=w_[:,0], y=w_[:,1], z=loss_, mode='markers', name='Loss Learning Route'),
+                          go.Scatter3d(x=w_[:,0], y=w_[:,1], z=np.zeros(w_.shape[0]), mode='markers', name='Weights Learning Route')
+                          ])
+    fig.update_layout(title='Loss Surface', scene={'xaxis_title':'w', 'yaxis_title':'b', 'zaxis_title':'Loss'})
 
   elif x.shape[1] == 2:
     fig = go.Figure(data=go.Scatter3d(x=w_[:,0], y=w_[:,1], z=w_[:,2], mode='markers', text=loss_, marker=dict(size=loss_)))
