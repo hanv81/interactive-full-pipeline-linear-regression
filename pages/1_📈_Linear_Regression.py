@@ -111,6 +111,7 @@ def draw_loss_history(history, history_batch):
 @st.cache_data
 def visualize_loss_surface(x, y, w_optimal, history):
   w_ = np.array(history['weights'])
+  loss_ = np.array(history['loss'])
   if x.shape[1] == 1:
     fig = make_subplots(rows=1, cols=2, subplot_titles=('Learning Curve', 'Loss Surface'),
                         specs=[[{'type':'xy'}, {'type':'surface'}]])
@@ -120,7 +121,6 @@ def visualize_loss_surface(x, y, w_optimal, history):
     fig.update_xaxes(title_text="w", row=1, col=1)
     fig.update_yaxes(title_text="b", row=1, col=1)
 
-    loss_ = np.array(history['loss'])
     w0,b0 = w_optimal
     w = np.linspace(min(w0-3, w_[:,0].min()), max(w0+3, w_[:,0].max()), 200)
     b = np.linspace(min(b0-3, w_[:,1].min()), max(b0+3, w_[:,1].max()), 200)
@@ -133,8 +133,8 @@ def visualize_loss_surface(x, y, w_optimal, history):
     fig.add_trace(go.Scatter3d(x=w_[:,0], y=w_[:,1], z=np.zeros(w_.shape[0]), mode='markers'), row=1, col=2)
 
   elif x.shape[1] == 2:
-    fig = px.scatter_3d(x=w_[:,0], y=w_[:,1], z=w_[:,2], 
-                        color=[0 if 0 < i < len(w_)-1 else 1 for i in range(len(w_))])
+    fig = go.Figure(data=go.Scatter3d(x=w_[:,0], y=w_[:,1], z=w_[:,2], mode='markers', text=loss_, marker=dict(size=loss_)))
+    fig.update_layout(title='Learning Route', scene={'xaxis_title':'w1', 'yaxis_title':'w2', 'zaxis_title':'b'})
   st.plotly_chart(fig)
 
 def train(x, y, eta, epochs, batch_train, batch_size):
