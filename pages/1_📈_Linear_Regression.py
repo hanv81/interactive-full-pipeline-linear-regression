@@ -75,6 +75,24 @@ def visualize_regression_line(x, y, history, history_batch, w_optimal):
   
   fig.update_layout(height=500, width=800)
   st.plotly_chart(fig)
+  
+  w = history_batch['weights'] if history_batch else history['weights']
+  fig = go.Figure(data=[go.Scatter(x=x.flatten(), y=y.flatten(), mode='markers', marker=dict(color='blue')),
+						go.Scatter(x=x.flatten(), y=y.flatten(), mode='markers', marker=dict(color='blue'))],
+                  layout=go.Layout(showlegend=False,
+                                    xaxis=dict(range=[x.min(), x.max()], autorange=False),
+                                    yaxis=dict(range=[y.min(), y.max()], autorange=False),
+                                    title="Learning History",
+                                    updatemenus=[dict(
+                                        type="buttons",
+                                        buttons=[dict(label="Play",
+                                                      method="animate",
+                                                      args=[None])])]
+                                  ),
+                  frames=[go.Frame(data=[go.Scatter(x=x_line, y=x_line*w[i][0] + w[i][1], mode='lines', line=dict(color='red'))])
+                          for i in range(len(w))]
+                  )
+  st.plotly_chart(fig)
 
 def visualize_regression_plane(x, y, history, history_batch):
   w_batch = history['weights'][np.argmin(history['loss'])]
