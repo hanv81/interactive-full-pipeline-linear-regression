@@ -77,8 +77,8 @@ def visualize_regression_line(x, y, history, history_batch, w_optimal):
   st.plotly_chart(fig)
   
   w = history_batch['weights'] if history_batch else history['weights']
-  fig = go.Figure(data=[go.Scatter(x=x.flatten(), y=y.flatten(), mode='markers', marker=dict(color='blue')),
-						go.Scatter(x=x.flatten(), y=y.flatten(), mode='markers', marker=dict(color='blue'))],
+  fig = go.Figure(data=[go.Scatter(x=x.flatten(), y=y.flatten(), mode='markers'),
+						go.Scatter(x=x.flatten(), y=y.flatten(), mode='markers')],
                   layout=go.Layout(showlegend=False,
                                     xaxis=dict(range=[x.min(), x.max()], autorange=False),
                                     yaxis=dict(range=[y.min(), y.max()], autorange=False),
