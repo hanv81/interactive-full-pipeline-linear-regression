@@ -92,6 +92,20 @@ def draw_result(X, y, history, history_batch, threshold):
   fig.update_layout(showlegend=False)
 
   st.plotly_chart(fig)
+  
+  w = history_batch['weights'] if history_batch else history['weights']
+  fig = go.Figure(data=[go.Scatter(x=X[:,0], y=X[:,1], mode='markers', marker=dict(color=np.where(y==0,'orange','blue'))),
+						go.Scatter(x=X[:,0], y=X[:,1], mode='markers', marker=dict(color=np.where(y==0,'orange','blue')))],
+                  layout=go.Layout(showlegend=False,
+                                    xaxis=dict(range=[X[:,0].min()-.05, X[:,0].max()+.05], autorange=False),
+                                    yaxis=dict(range=[X[:,1].min()-.05, X[:,1].max()+.05], autorange=False),
+                                    title="Learning History",
+                                    updatemenus=[dict(type="buttons", buttons=[dict(label="Play",method="animate",args=[None])])]
+                                  ),
+                  frames=[go.Frame(data=[go.Scatter(x=x1, y=(-x1*w[i][0] - w[i][2])/w[i][1], mode='lines', line=dict(color='red'))])
+                          for i in range(len(w))]
+                 )
+  st.plotly_chart(fig)
 
 def train(X, y, eta, epochs, batch_size=0):
   t = time.time()
