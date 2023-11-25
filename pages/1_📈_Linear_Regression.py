@@ -136,15 +136,18 @@ def visualize_loss_surface(x, y, w_optimal, history):
     ww, bb = np.meshgrid(w, b)
     wb = np.c_[ww.ravel(), bb.ravel()]
     loss_surface = np.mean((wb[:,0]*x + wb[:,1]-y)**2, axis=0)
-    fig = go.Figure(data=[go.Surface(x=w, y=b, z=loss_surface.reshape(ww.shape), name='Loss Surface'),
-                          go.Scatter3d(x=w_[:,0], y=w_[:,1], z=loss_, mode='markers', name='Loss Learning Route'),
-                          go.Scatter3d(x=w_[:,0], y=w_[:,1], z=np.zeros(w_.shape[0]), mode='markers', name='Weights Learning Route')
-                          ])
-    fig.update_layout(title='Loss Surface', scene={'xaxis_title':'w', 'yaxis_title':'b', 'zaxis_title':'Loss'})
-
+    fig = go.Figure(data=[go.Surface(x=w, y=b, z=loss_surface.reshape(ww.shape)),go.Surface(x=w, y=b, z=loss_surface.reshape(ww.shape))],
+                    layout=go.Layout(title='Loss Surface', showlegend=False, hovermode="closest",
+                                     scene={'xaxis_title':'w', 'yaxis_title':'b', 'zaxis_title':'Loss'},
+                                     updatemenus=[dict(type="buttons", buttons=[dict(label="Play", method="animate", args=[None])])]),
+                    frames=[go.Frame(data=[go.Scatter3d(x=[w_[i,0]], y=[w_[i,1]], z=[loss_[i]], mode="markers")]) for i in range(len(w_))])
   elif x.shape[1] == 2:
-    fig = go.Figure(data=go.Scatter3d(x=w_[:,0], y=w_[:,1], z=w_[:,2], mode='markers', text=loss_, marker=dict(size=loss_)))
-    fig.update_layout(title='Learning Route', scene={'xaxis_title':'w1', 'yaxis_title':'w2', 'zaxis_title':'b'})
+    fig = go.Figure(data=[go.Scatter3d(x=w_[:,0], y=w_[:,1], z=w_[:,2], mode='markers', text=loss_, marker=dict(size=loss_))],
+                    layout=go.Layout(title='Loss Surface', showlegend=False, hovermode="closest",
+                                     scene={'xaxis_title':'w1', 'yaxis_title':'w2', 'zaxis_title':'b'},
+                                     updatemenus=[dict(type="buttons", buttons=[dict(label="Play", method="animate", args=[None])])]),
+                    frames=[go.Frame(data=[go.Scatter3d(x=[w_[i,0]], y=[w_[i,1]], z=[loss_[i]], mode="markers", marker=dict(size=[loss_[i]]))])
+                                     for i in range(len(w_))])
   st.plotly_chart(fig)
 
 def train(x, y, eta, epochs, batch_train, batch_size):
