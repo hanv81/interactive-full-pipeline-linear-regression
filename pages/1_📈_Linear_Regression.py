@@ -55,7 +55,7 @@ def visualize_regression_line(x, y, history, history_batch, w_optimal):
     data = [go.Scatter(y=history['loss'], mode='lines', name='Batch', line = dict(color='magenta'))]
     if history_batch:
       data.append(go.Scatter(y=history_batch['loss'], name='Mini-batch'))
-    fig = go.Figure(data=data, layout=go.Layout({'showlegend':False, 'title':'Loss', 'xaxis_title':'Epochs', 'width':300}))
+    fig = go.Figure(data=data, layout=go.Layout(showlegend=False, title='Loss', xaxis_title='Epochs', width=300))
     st.plotly_chart(fig)
 
   with col2:
@@ -72,7 +72,8 @@ def visualize_regression_line(x, y, history, history_batch, w_optimal):
       y_gd_batch = x_line * w + b
       data.append(go.Scatter(x=x_line, y=y_gd_batch, mode='lines', name='Mini-batch', line = dict(color='tomato')))
 
-    layout=go.Layout(title="Regression Line", width=500, updatemenus=[dict(type="buttons", buttons=[dict(label=">", method="animate", args=[None])])])
+    layout=go.Layout(title="Regression Line", xaxis_title='x', yaxis_title='y', width=500,
+                     updatemenus=[dict(type="buttons", buttons=[dict(label=">", method="animate", args=[None])])])
     frames=[go.Frame(data=[go.Scatter(x=x_line, y=x_line*w_[i,0] + w_[i,1], mode='lines', line=dict(color='green'))])
                           for i in range(len(w_))]
     fig = go.Figure(data=data, layout=layout,frames=frames)
