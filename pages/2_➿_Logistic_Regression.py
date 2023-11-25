@@ -61,50 +61,38 @@ def fit(X, y, ETA, EPOCHS, batch_size=0):
 
   return history
 
-def draw_result(X, y, history, history_batch, threshold):
-  fig = make_subplots(rows=1, cols=3, subplot_titles=('Decision Boundary', 'History', 'Learning Route'),
-                      specs=[[{'type':'xy'}, {'type':'xy'}, {'type':'surface'}]])
-  fig.add_trace(go.Scatter(x=X[:,0], y=X[:,1], mode='markers', marker=dict(color=np.where(y==0,'orange','blue')),
-                           text=np.where(y==0,'Class 0','Class 1')), row=1, col=1)
+def visualize_decision_boundary(X, y, history, history_batch, threshold):
+  w = np.array(history_batch['weights']) if history_batch else np.array(history['weights'])
   x1 = np.array([X[:, 0].min()-.05, X[:, 0].max()+.05])
-  w = history['weights'][-1]
-  x2 = -(x1*w[0] + w[2])/w[1]
-  fig.add_trace(go.Scatter(x=x1, y=x2, mode='lines', name = 'Decision Boundary',
-                           marker=dict(color='yellowgreen')), row=1, col=1)
+  x2 = -(x1*w[-1][0] + w[-1][2])/w[-1][1]
+  data = [go.Scatter(x=x1, y=x2, mode='lines', name = 'Threshold 0.5', marker=dict(color='yellowgreen')),
+          go.Scatter(x=X[y==0,0], y=X[y==0,1], mode='markers', name='Class 0', marker=dict(color='orange')),
+          go.Scatter(x=X[y==1,0], y=X[y==1,1], mode='markers', name='Class 1', marker=dict(color='blue'))
+          ]
   if threshold != .5:
-    x2_t = -(x1*w[0] + w[2] + np.log(1/threshold-1))/w[1]
-    fig.add_trace(go.Scatter(x=x1, y=x2_t, mode='lines', name = f'Threshold {threshold}',
-                             line=dict(color='red', dash='dash')), row=1, col=1)
-
-  if history_batch:
-    fig.add_trace(go.Scatter(y=history_batch['loss'], name='Mini-batch Loss'), row=1, col=2)
-  fig.add_trace(go.Scatter(y=history['loss'], mode='lines', name='Batch Loss', line = dict(color='magenta')), row=1, col=2)
-  fig.add_trace(go.Scatter(y=history['accuracy'], mode='lines', name='Accuracy'), row=1, col=2)
-
-  w_ = np.array(history_batch['weights']) if history_batch else np.array(history['weights'])
-  loss = np.array(history_batch['loss']) if history_batch else np.array(history['loss'])
-  fig.add_trace(go.Scatter3d(x=w_[:,0], y=w_[:,1], z=w_[:,2], mode='markers', 
-                             text=loss, marker=dict(size=loss*20, color='red')), row=1, col=3)
-
-  fig.update_xaxes(title_text="x1", row=1, col=1)
-  fig.update_yaxes(title_text="x2", row=1, col=1)
-  fig.update_xaxes(title_text="Epochs", row=1, col=2)
-  fig.update_layout(showlegend=False)
-
+    x2_t = -(x1*w[-1][0] + w[-1][2] + np.log(1/threshold-1))/w[-1][1]
+    data.append(go.Scatter(x=x1, y=x2_t, mode='lines', name = f'Threshold {threshold}', line=dict(color='red', dash='dash')))
+  layout = go.Layout(showlegend=True, title="Decision Boundary",
+                     xaxis=dict(range=[X[:,0].min()-.05, X[:,0].max()+.05], autorange=False),
+                     yaxis=dict(range=[X[:,1].min()-.05, X[:,1].max()+.05], autorange=False),
+                     updatemenus=[dict(type="buttons", buttons=[dict(label="Play",method="animate",args=[None])])]
+                     )
+  frames=[go.Frame(data=[go.Scatter(x=x1, y=(-x1*w[i][0] - w[i][2])/w[i][1], mode='lines', name = 'Threshold 0.5', line=dict(color='yellowgreen'))])
+                         for i in range(len(w))]
+  fig = go.Figure(data=data, layout=layout, frames=frames)
   st.plotly_chart(fig)
-  
-  w = history_batch['weights'] if history_batch else history['weights']
-  fig = go.Figure(data=[go.Scatter(x=X[:,0], y=X[:,1], mode='markers', marker=dict(color=np.where(y==0,'orange','blue'))),
-						go.Scatter(x=X[:,0], y=X[:,1], mode='markers', marker=dict(color=np.where(y==0,'orange','blue')))],
-                  layout=go.Layout(showlegend=False,
-                                    xaxis=dict(range=[X[:,0].min()-.05, X[:,0].max()+.05], autorange=False),
-                                    yaxis=dict(range=[X[:,1].min()-.05, X[:,1].max()+.05], autorange=False),
-                                    title="Learning History",
-                                    updatemenus=[dict(type="buttons", buttons=[dict(label="Play",method="animate",args=[None])])]
-                                  ),
-                  frames=[go.Frame(data=[go.Scatter(x=x1, y=(-x1*w[i][0] - w[i][2])/w[i][1], mode='lines', line=dict(color='red'))])
-                          for i in range(len(w))]
-                 )
+
+  fig = make_subplots(rows=1, cols=2, subplot_titles=('History', 'Learning Route'),
+                      specs=[[{'type':'xy'}, {'type':'surface'}]])
+  if history_batch:
+    fig.add_trace(go.Scatter(y=history_batch['loss'], name='Mini-batch Loss'), row=1, col=1)
+  fig.add_trace(go.Scatter(y=history['loss'], mode='lines', name='Batch Loss', line = dict(color='magenta')), row=1, col=1)
+  fig.add_trace(go.Scatter(y=history['accuracy'], mode='lines', name='Accuracy'), row=1, col=1)
+
+  loss = np.array(history_batch['loss']) if history_batch else np.array(history['loss'])
+  fig.add_trace(go.Scatter3d(x=w[:,0], y=w[:,1], z=w[:,2], mode='markers', name='Loss',
+                             text=loss, marker=dict(size=loss*20, color='red')), row=1, col=2)
+  fig.update_xaxes(title_text="Epochs", row=1, col=1)
   st.plotly_chart(fig)
 
 def train(X, y, eta, epochs, batch_size=0):
@@ -115,7 +103,7 @@ def train(X, y, eta, epochs, batch_size=0):
 
 def show_result(X, y, history, history_batch, threshold):
   with st.spinner('Visualizing...'):
-    draw_result(X, y, history, history_batch, threshold)
+    visualize_decision_boundary(X, y, history, history_batch, threshold)
     col4, col5 = st.columns(2)
     with col4:
       w = history['weights'][-1]
