@@ -75,29 +75,21 @@ def visualize_regression_line(x, y, history, history_batch, w_optimal, loss_fig)
     fig = go.Figure(data=data, layout=layout,frames=frames)
     st.plotly_chart(fig)
 
-def visualize_regression_plane(x, y, history, history_batch):
-  w_batch = history['weights'][np.argmin(history['loss'])]
-  x_plane = [x[:,0].min(), x[:,0].max()]
-  y_plane = [x[:,1].min(), x[:,1].max()]
-  xx, yy = np.meshgrid(x_plane, y_plane)
-  xy = np.c_[xx.ravel(), yy.ravel()]
-  z_batch = xy[:,0]*w_batch[0] + xy[:,1]*w_batch[1] + w_batch[2]
-  fig = make_subplots(rows=1, cols=2, subplot_titles=('Regression Plane', 'Loss'),
-                      specs=[[{"type": "scatter3d"}, {"type": "scatter"}]])
-
-  fig.add_trace(go.Scatter3d(x=x[:,0], y=x[:,1], z=y.flatten(), mode='markers', name='Data'), row=1, col=1)
-  fig.add_trace(go.Surface(x=x_plane, y=y_plane, z=z_batch.reshape(xx.shape), name='Batch'), row=1, col=1)
-
-  if history_batch:
-    w_minibatch = history_batch['weights'][np.argmin(history_batch['loss'])]
-    z_minibatch = xy[:,0]*w_minibatch[0] + xy[:,1]*w_minibatch[1] + w_minibatch[2]
-    fig.add_trace(go.Surface(x=x_plane, y=y_plane, z=z_minibatch.reshape(xx.shape), name='Mini-batch'), row=1, col=1)
-    fig.add_trace(go.Scatter(y=history_batch['loss'], name='Mini-batch'), row=1, col=2)
-  fig.add_trace(go.Scatter(y=history['loss'], name='Batch', line = dict(color='magenta')), row=1, col=2)
-
-  fig.update_xaxes(title_text="Epochs", row=1, col=2)
-  fig.update_layout(height=500, width=800)
-  st.plotly_chart(fig)
+def visualize_regression_plane(x, y, history, loss_fig):
+  col1,col2 = st.columns(2)
+  with col1:
+    st.plotly_chart(loss_fig)
+  with col2:
+    w_batch = history['weights'][np.argmin(history['loss'])]
+    x_plane = [x[:,0].min(), x[:,0].max()]
+    y_plane = [x[:,1].min(), x[:,1].max()]
+    xx, yy = np.meshgrid(x_plane, y_plane)
+    xy = np.c_[xx.ravel(), yy.ravel()]
+    z_batch = xy[:,0]*w_batch[0] + xy[:,1]*w_batch[1] + w_batch[2]
+    data=[go.Scatter3d(x=x[:,0], y=x[:,1], z=y.flatten(), mode='markers', name='Data'),
+          go.Surface(x=x_plane, y=y_plane, z=z_batch.reshape(xx.shape), name='Batch')]
+    fig = go.Figure(data=data, layout=go.Layout(title='Regression Plane', width=500, scene={'xaxis_title':'x1', 'yaxis_title':'x2', 'zaxis_title':'y'}))
+    st.plotly_chart(fig)
 
 def create_loss_history_chart(history, history_batch):
   data = [go.Scatter(y = history_batch['loss'], mode = 'lines', name='Mini-batch')] if history_batch else []
@@ -154,7 +146,8 @@ def visualize_result(x, y, history, history_batch, w_optimal, draw_loss_surface)
       fig.update_layout(width=350, showlegend=False)
       visualize_regression_line(x, y, history, history_batch, w_optimal, fig)
     elif x.shape[1] == 2:
-      visualize_regression_plane(x, y, history, history_batch)
+      fig.update_layout(width=350, showlegend=False)
+      visualize_regression_plane(x, y, history, fig)
     else:
       st.plotly_chart(fig)
     if draw_loss_surface:
