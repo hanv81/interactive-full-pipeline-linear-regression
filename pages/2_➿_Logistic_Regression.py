@@ -82,6 +82,8 @@ def visualize_decision_boundary(X, y, history, history_batch, threshold):
   fig = go.Figure(data=data, layout=layout, frames=frames)
   st.plotly_chart(fig)
 
+def visualize_history(history, history_batch):
+  w = np.array(history_batch['weights']) if history_batch else np.array(history['weights'])
   fig = make_subplots(rows=1, cols=2, subplot_titles=('History', 'Learning Route'),
                       specs=[[{'type':'xy'}, {'type':'surface'}]])
   if history_batch:
@@ -95,6 +97,21 @@ def visualize_decision_boundary(X, y, history, history_batch, threshold):
   fig.update_xaxes(title_text="Epochs", row=1, col=1)
   st.plotly_chart(fig)
 
+def show_report(X, y, history, threshold):
+  col1, col2 = st.columns(2)
+  with col1:
+    w = history['weights'][-1]
+    X_ = np.concatenate((X, np.ones((X.shape[0], 1))), axis=1)
+    y_pred = feed_forward(X_, w)
+    y_pred_label = [0 if i < threshold else 1 for i in y_pred]
+    cm = confusion_matrix(y, y_pred_label)
+    fig = plt.figure()
+    sns.heatmap(cm, annot=True, cmap='Blues', fmt='d')
+    st.pyplot(fig)
+  with col2:
+    st.subheader('Classification Report')
+    st.text(classification_report(y, y_pred_label))
+
 def train(X, y, eta, epochs, batch_size=0):
   t = time.time()
   history = fit(X, y, eta, epochs, batch_size)
@@ -104,19 +121,8 @@ def train(X, y, eta, epochs, batch_size=0):
 def show_result(X, y, history, history_batch, threshold):
   with st.spinner('Visualizing...'):
     visualize_decision_boundary(X, y, history, history_batch, threshold)
-    col4, col5 = st.columns(2)
-    with col4:
-      w = history['weights'][-1]
-      X_ = np.concatenate((X, np.ones((X.shape[0], 1))), axis=1)
-      y_pred = feed_forward(X_, w)
-      y_pred_label = [0 if i < threshold else 1 for i in y_pred]
-      cm = confusion_matrix(y, y_pred_label)
-      fig = plt.figure()
-      sns.heatmap(cm, annot=True, cmap='Blues', fmt='d')
-      st.pyplot(fig)
-    with col5:
-      st.subheader('Classification Report')
-      st.text(classification_report(y, y_pred_label))
+    visualize_history(history, history_batch)
+  show_report(X, y, history, threshold)
 
 def main():
   st.header('Logistic Regression')
