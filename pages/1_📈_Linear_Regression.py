@@ -49,14 +49,10 @@ def fit(x, y, eta, epochs, batch_size=0):
   t = int((time.time() - t)*1000)
   return history, t
 
-def visualize_regression_line(x, y, history, history_batch, w_optimal):
+def visualize_regression_line(x, y, history, history_batch, w_optimal, loss_fig):
   col1,col2 = st.columns(2)
   with col1:
-    data = [go.Scatter(y=history['loss'], mode='lines', name='Batch', line = dict(color='magenta'))]
-    if history_batch:
-      data.append(go.Scatter(y=history_batch['loss'], name='Mini-batch'))
-    fig = go.Figure(data=data, layout=go.Layout(showlegend=False, title='Loss', xaxis_title='Epochs', width=300))
-    st.plotly_chart(fig)
+    st.plotly_chart(loss_fig)
 
   with col2:
     w_ = np.array(history['weights'])
@@ -103,12 +99,10 @@ def visualize_regression_plane(x, y, history, history_batch):
   fig.update_layout(height=500, width=800)
   st.plotly_chart(fig)
 
-def draw_loss_history(history, history_batch):
+def create_loss_history_chart(history, history_batch):
   data = [go.Scatter(y = history_batch['loss'], mode = 'lines', name='Mini-batch')] if history_batch else []
   data.append(go.Scatter(y = history['loss'], mode = 'lines', name='Batch', line = dict(color='magenta')))
-  fig = go.Figure(data)
-  fig.update_layout(xaxis_title="Epochs", yaxis_title="Loss")
-  st.plotly_chart(fig)
+  return go.Figure(data=data, layout=go.Layout(xaxis_title="Epochs", title="Loss"))
 
 @st.cache_data
 def visualize_loss_surface(x, y, w_optimal, history):
@@ -155,12 +149,14 @@ def train(x, y, eta, epochs, batch_train, batch_size):
 
 def visualize_result(x, y, history, history_batch, w_optimal, draw_loss_surface):
   with st.spinner('Visualizing...'):
+    fig = create_loss_history_chart(history, history_batch)
     if x.shape[1] == 1:
-      visualize_regression_line(x, y, history, history_batch, w_optimal)
+      fig.update_layout(width=350, showlegend=False)
+      visualize_regression_line(x, y, history, history_batch, w_optimal, fig)
     elif x.shape[1] == 2:
       visualize_regression_plane(x, y, history, history_batch)
     else:
-      draw_loss_history(history, history_batch)
+      st.plotly_chart(fig)
     if draw_loss_surface:
       visualize_loss_surface(x, y, w_optimal, history_batch if history_batch else history)
 
