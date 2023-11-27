@@ -107,7 +107,8 @@ def visualize_loss_surface(x, y, w_optimal, history):
                     layout=go.Layout(title='Loss Surface', showlegend=False, hovermode="closest",
                                      scene={'xaxis_title':'w', 'yaxis_title':'b', 'zaxis_title':'Loss'},
                                      updatemenus=[dict(type="buttons", buttons=[dict(label="Play", method="animate", args=[None])])]),
-                    frames=[go.Frame(data=[go.Scatter3d(x=[w_[i,0]], y=[w_[i,1]], z=[loss_[i]], mode="markers")]) for i in range(len(w_))])
+                    frames=[go.Frame(data=[go.Scatter3d(x=w_[:i,0], y=w_[:i,1], z=loss_[:i], mode="markers", marker=dict(size=[10]*(i+1)))])
+                            for i in range(len(w_))])
   elif x.shape[1] == 2:
     fig = go.Figure(data=[go.Scatter3d(x=w_[:,0], y=w_[:,1], z=w_[:,2], mode='markers', text=loss_, marker=dict(size=loss_))],
                     layout=go.Layout(title='Loss Surface', showlegend=False, hovermode="closest",
@@ -162,10 +163,10 @@ def main():
     n_features = st.number_input('Number of Features', value=1, min_value=1, max_value=10, step=1)
     x,y = generate_data(n_samples, n_features)
   with col2:
-    eta = st.number_input('Learning Rate', value=.01, step=.01, max_value=.1, min_value=.0001)
+    eta = st.number_input('Learning Rate', value=.1, step=.01, max_value=.1, min_value=.0001)
     epochs = st.number_input('Epochs', value=100, step=50, min_value=10)
   with col3:
-    draw_loss_surface = st.toggle('Draw Loss Surface') if n_features < 3 else False
+    draw_loss_surface = st.toggle('Draw Loss Surface', True) if n_features < 3 else False
     batch_train = st.toggle('Mini-Batch GD')
     batch_size = st.number_input('Batch Size', min_value=1, max_value=100, value=10, step=5)
 
