@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
-from sklearn.cluster import KMeans
 from stqdm import stqdm
 
 @st.cache_data
@@ -43,6 +42,7 @@ def generate_weights(n_classes, n_features):
 @st.cache_data
 def kmeans(X, n_clusters):
   t = time.time()
+  history = []
   centers = X[np.random.choice(X.shape[0], n_clusters, replace = False)]
   while True:
     d = [[np.linalg.norm(x-c) for c in centers] for x in X]
@@ -50,9 +50,10 @@ def kmeans(X, n_clusters):
 
     centers_new = np.array([np.mean(X[y==i], axis=0) for i in range(n_clusters)])
 
+    history.append((centers, y))
     if np.array_equal(centers, centers_new):
       t = (time.time() - t)*1000
-      return centers, y, t
+      return history, t
     centers = centers_new
 
 @st.cache_data
@@ -93,12 +94,14 @@ def train(X, y, ETA, EPOCHS, batch_size=0):
   t = (time.time() - t)*1000
   return history, loss, acc, t
 
-def draw_result(X, y, centers, history):
+def visualize_clustering_history(X, history):
+  centers, y = history[-1]
   fig = go.Figure(data=[go.Scatter(x=X[:,0], y=X[:,1], mode='markers', marker=dict(color=y)),
                         go.Scatter(x=centers[:,0], y=centers[:,1], mode='markers', marker_color='orange', marker=dict(symbol='star', size=8))],
                   layout=go.Layout(title='Clustering', xaxis_title='x1', yaxis_title='x2', showlegend=False))
   st.plotly_chart(fig)
 
+def visualize_softmax_history(history):
   fig = make_subplots(rows=1, cols=2, subplot_titles=('Loss', 'Accuracy'))
   fig.add_trace(go.Scatter(y=history['loss'], mode='lines', name='Loss', line = dict(color='magenta')), row=1, col=1)
   fig.add_trace(go.Scatter(y=history['accuracy'], mode='lines', name='Accuracy'), row=1, col=2)
@@ -124,12 +127,16 @@ def main():
     if not batch_train:batch_size = 0
 
   X = create_dataset(n_samples)
-  centers, y, t = kmeans(X, n_clusters)
+  clustering_history, t = kmeans(X, n_clusters)
+  centers, y = clustering_history[-1]
   history, loss, acc, t_train = train(X, y, eta, epochs, batch_size)
+
   with st.expander('Training Info'):
     st.write('Clustering time:', int(t))
     st.write('Training time:', int(t), 'Loss:', round(loss,4), 'Accuracy:', round(acc*100,2))
-  draw_result(X, y, centers, history)
+
+  visualize_clustering_history(X, clustering_history)
+  visualize_softmax_history(history)
 
 if __name__ == "__main__":
   main()
