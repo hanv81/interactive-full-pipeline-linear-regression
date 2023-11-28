@@ -94,15 +94,17 @@ def train(X, y, ETA, EPOCHS, batch_size=0):
   return history, loss, acc, t
 
 def draw_result(X, y, centers, history):
-  fig = make_subplots(rows=1, cols=3, subplot_titles=('Clustering', 'Loss', 'Accuracy'))
-  for i in range(len(centers)):
-    fig.add_trace(go.Scatter(x=X[y==i,0], y=X[y==i,1], mode='markers', name=f'Class {i}'), row=1, col=1)
-  fig.add_trace(go.Scatter(x=centers[:,0], y=centers[:,1], mode='markers', marker_color='orange', name='Centers', marker=dict(symbol='star-diamond', size=8)),
-                           row=1, col=1)
-  fig.add_trace(go.Scatter(y=history['loss'], mode='lines', name='Loss', line = dict(color='magenta')), row=1, col=2)
-  fig.add_trace(go.Scatter(y=history['accuracy'], mode='lines', name='Accuracy'), row=1, col=3)
+  fig = go.Figure(data=[go.Scatter(x=X[:,0], y=X[:,1], mode='markers', marker=dict(color=y)),
+                        go.Scatter(x=centers[:,0], y=centers[:,1], mode='markers', marker_color='orange', marker=dict(symbol='star', size=8))],
+                  layout=go.Layout(title='Clustering', xaxis_title='x1', yaxis_title='x2', showlegend=False))
+  st.plotly_chart(fig)
+
+  fig = make_subplots(rows=1, cols=2, subplot_titles=('Loss', 'Accuracy'))
+  fig.add_trace(go.Scatter(y=history['loss'], mode='lines', name='Loss', line = dict(color='magenta')), row=1, col=1)
+  fig.add_trace(go.Scatter(y=history['accuracy'], mode='lines', name='Accuracy'), row=1, col=2)
+  fig.update_xaxes(title_text="Epochs", row=1, col=1)
   fig.update_xaxes(title_text="Epochs", row=1, col=2)
-  fig.update_xaxes(title_text="Epochs", row=1, col=3)
+  fig.update_layout(showlegend=False, title='History')
   st.plotly_chart(fig)
 
 def main():
