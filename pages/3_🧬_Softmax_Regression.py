@@ -94,11 +94,24 @@ def train(X, y, ETA, EPOCHS, batch_size=0):
   t = (time.time() - t)*1000
   return history, loss, acc, t
 
-def visualize_clustering_history(X, history):
-  centers, y = history[-1]
-  fig = go.Figure(data=[go.Scatter(x=X[:,0], y=X[:,1], mode='markers', marker=dict(color=y)),
-                        go.Scatter(x=centers[:,0], y=centers[:,1], mode='markers', marker_color='orange', marker=dict(symbol='star', size=8))],
-                  layout=go.Layout(title='Clustering', xaxis_title='x1', yaxis_title='x2', showlegend=False))
+def visualize_clustering_history(X, history, n_clusters):
+  for i in range(len(history)):
+    centers, y = history[i]
+    X_ = np.concatenate((X, centers))
+    y_ = np.concatenate((y, [n_clusters]*n_clusters))
+    history[i] = X_, y_
+
+  X_, y_  = history[-1]
+  symbol = np.where(y_ < n_clusters, 'circle', 'star')
+  size = np.where(y_ < n_clusters, 7, 12)
+  data = [go.Scatter(x=history[0][0][:,0], y=history[0][0][:,1], mode='markers', marker=dict(color=history[0][1], symbol=symbol, size=size))]
+  frames=[go.Frame(data=[go.Scatter(x=history[i][0][:,0], y=history[i][0][:,1], mode='markers', text=history[i][1],
+                                    marker=dict(color=history[i][1], symbol=symbol, size=size))])
+          for i in range(len(history))]
+  layout=go.Layout(title='Loss Surface', showlegend=False, hovermode="closest", xaxis_title='x1', yaxis_title='x2',
+                   updatemenus=[dict(type="buttons", buttons=[dict(label="Play", method="animate",
+                                     args=[None, {"frame": {"duration": 1000, "redraw": False},}])])])
+  fig = go.Figure(data=data, layout=layout, frames=frames)
   st.plotly_chart(fig)
 
 def visualize_softmax_history(history):
@@ -135,7 +148,7 @@ def main():
     st.write('Clustering time:', int(t))
     st.write('Training time:', int(t), 'Loss:', round(loss,4), 'Accuracy:', round(acc*100,2))
 
-  visualize_clustering_history(X, clustering_history)
+  visualize_clustering_history(X, clustering_history, n_clusters)
   visualize_softmax_history(history)
 
 if __name__ == "__main__":
