@@ -108,7 +108,7 @@ def visualize_clustering_history(X, history, n_clusters):
   frames=[go.Frame(data=[go.Scatter(x=history[i][0][:,0], y=history[i][0][:,1], mode='markers', text=history[i][1],
                                     marker=dict(color=history[i][1], symbol=symbol, size=size))])
           for i in range(len(history))]
-  layout=go.Layout(title='Loss Surface', showlegend=False, hovermode="closest", xaxis_title='x1', yaxis_title='x2',
+  layout=go.Layout(title='Clustering', showlegend=False, hovermode="closest", xaxis_title='x1', yaxis_title='x2',
                    updatemenus=[dict(type="buttons", buttons=[dict(label="Play", method="animate",
                                      args=[None, {"frame": {"duration": 1000, "redraw": False},}])])])
   fig = go.Figure(data=data, layout=layout, frames=frames)
