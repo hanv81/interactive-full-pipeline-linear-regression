@@ -48,12 +48,12 @@ def draw_result(X, y, history):
   st.write('Optimal weights:', w,b)
   xx = np.linspace(X.min()-.5, X.max()+.5)
   yy = 1/(1 + np.exp(-xx*w - b))
+  color = np.where(y == 0, 'rgba(255, 0, 0, .8)', 'rgba(0, 0, 255, .8)')
 
   fig = make_subplots(rows=1, cols=2, subplot_titles=('History', 'Result'))
   fig.add_trace(go.Scatter(y=history['loss'], mode='lines', name='Loss'), row=1, col=1)
   fig.add_trace(go.Scatter(y=history['accuracy'], mode='lines', name='Accuracy'), row=1, col=1)
-  fig.add_trace(go.Scatter(x=X.flatten()[y==0], y=y[y==0], marker_color='rgba(255, 0, 0, .8)', mode='markers', name='Class 0'), row=1, col=2)
-  fig.add_trace(go.Scatter(x=X.flatten()[y==1], y=y[y==1], marker_color='rgba(0, 0, 255, .8)', mode='markers', name='Class 1'), row=1, col=2)
+  fig.add_trace(go.Scatter(x=X.flatten(), y=y, mode='markers', marker=dict(color=color)), row=1, col=2)
   fig.add_trace(go.Scatter(x=xx, y=yy, mode='lines', name='Class 1 Probability', marker_color='rgba(0, 0, 255, .8)'), row=1, col=2)
   fig.add_trace(go.Scatter(x=xx, y=1-yy, mode='lines', name='Class 2 Probability', marker_color='rgba(255, 0, 0, .8)'), row=1, col=2)
   fig.add_trace(go.Scatter(x=[-b/w], y=[.5], name='Decision Point', marker_color='rgba(0, 0, 0, .8)'), row=1, col=2)
@@ -119,9 +119,8 @@ def create_dataset():
         with cols[0]:draw_bce = st.toggle('Draw BCE')
         with cols[1]:draw_mse = st.toggle('Draw MSE')
         if draw_bce + draw_mse == 0:
-          fig = go.Figure(data=[go.Scatter(x=X.flatten()[y==0], y=y[y==0], marker_color='rgba(255, 0, 0, .8)', mode='markers', name='Class 0'),
-                                go.Scatter(x=X.flatten()[y==1], y=y[y==1], marker_color='rgba(0, 0, 255, .8)', mode='markers', name='Class 1')],
-                          layout=go.Layout({"showlegend": False}))
+          color = np.where(y == 0, 'rgba(255, 0, 0, .8)', 'rgba(0, 0, 255, .8)')
+          fig = go.Figure(data=go.Scatter(x=X.flatten(), y=y, mode='markers', marker=dict(color=color)))
         else:
           col1, col2, col3 = st.columns(3)
           with col1:
